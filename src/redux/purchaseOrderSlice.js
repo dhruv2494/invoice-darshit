@@ -25,7 +25,7 @@ const purchaseOrderSlice = createSlice({
   name: "purchaseOrder",
   initialState: {
     purchaseOrders: [],
-    status: ["Pending", "Confirmed", "Shipped"], // predefined statuses
+    status: ['created', 'pending', 'completed'], // predefined statuses
     loading: false,
   },
   extraReducers: (builder) => {

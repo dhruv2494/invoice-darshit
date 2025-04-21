@@ -12,9 +12,15 @@ import ConfirmModal from "../components/ConfirmModal";
 import { toast } from "react-toastify";
 import { getCustomers } from "../redux/customerSlice";
 
+// Utility function to generate a 7-digit reference number
+const generateRefNo = () => {
+  return Math.floor(1000000 + Math.random() * 9000000).toString();
+};
+
 // Validation schema using Yup
 const validationSchema = Yup.object({
   customer: Yup.string().required("Customer is required"),
+  refNo: Yup.string().required("Reference number is required"),
   mobile: Yup.string()
     .required("Mobile is required")
     .matches(/^\d+$/, "Mobile must be a valid number"),
@@ -82,20 +88,18 @@ const PurchaseOrders = () => {
     setOrderToDelete(null);
   };
 
-  // Filtered orders based on search
-  const filteredOrders = purchaseOrders.filter((order) => {
+  const filteredOrders = purchaseOrders?.filter((order) => {
     const lowerSearch = searchTerm.toLowerCase();
     return (
       order.customerName?.toLowerCase().includes(lowerSearch) ||
       order.mobile?.toLowerCase().includes(lowerSearch) ||
       order.email?.toLowerCase().includes(lowerSearch) ||
       order.itemName?.toLowerCase().includes(lowerSearch) ||
-      String(order.price)?.toLowerCase().includes(lowerSearch) || // Convert price to string
-      String(order.quantity)?.toLowerCase().includes(lowerSearch) || // Convert quantity to string
+      String(order.price)?.toLowerCase().includes(lowerSearch) ||
+      String(order.quantity)?.toLowerCase().includes(lowerSearch) ||
       order.status?.toLowerCase().includes(lowerSearch)
     );
   });
-  
 
   return (
     <DashboardLayout>
@@ -108,9 +112,6 @@ const PurchaseOrders = () => {
           Add Purchase Order
         </button>
 
-
-
-        {/* Form */}
         {showForm && (
           <div className="bg-white shadow-lg rounded-lg p-6 mb-8">
             <h3 className="text-xl font-medium mb-4">
@@ -119,11 +120,12 @@ const PurchaseOrders = () => {
             <Formik
               initialValues={{
                 customer: editingOrder ? editingOrder.customer : "",
+                refNo: editingOrder ? editingOrder.refNo : generateRefNo(),
                 mobile: editingOrder ? editingOrder.mobile : "",
                 email: editingOrder ? editingOrder.email : "",
                 price: editingOrder ? editingOrder.price : "",
                 quantity: editingOrder ? editingOrder.quantity : "",
-                itemName: editingOrder ? editingOrder.itemName : "",
+                itemName: editingOrder ? editingOrder.itemName : "groundnut",
                 status: editingOrder ? editingOrder.status : "",
                 uuid: editingOrder ? editingOrder.uuid : "",
               }}
@@ -134,6 +136,22 @@ const PurchaseOrders = () => {
               {({ setFieldValue }) => (
                 <Form>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Reference Number
+                      </label>
+                      <Field
+                        type="text"
+                        name="refNo"
+                        disabled
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600"
+                      />
+                      <ErrorMessage
+                        name="refNo"
+                        component="div"
+                        className="text-red-500 text-sm"
+                      />
+                    </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700">
                         Customer
@@ -170,8 +188,6 @@ const PurchaseOrders = () => {
                         className="text-red-500 text-sm"
                       />
                     </div>
-
-                    {/* Mobile, Email, Price, Quantity, Item Name, Status */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700">
                         Mobile
@@ -179,8 +195,8 @@ const PurchaseOrders = () => {
                       <Field
                         type="text"
                         name="mobile"
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg"
                         disabled
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600"
                       />
                     </div>
                     <div>
@@ -190,8 +206,8 @@ const PurchaseOrders = () => {
                       <Field
                         type="email"
                         name="email"
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg"
                         disabled
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600"
                       />
                     </div>
                     <div>
@@ -262,7 +278,6 @@ const PurchaseOrders = () => {
                       />
                     </div>
                   </div>
-
                   <div className="mt-4">
                     <button
                       type="submit"
@@ -283,103 +298,65 @@ const PurchaseOrders = () => {
             </Formik>
           </div>
         )}
-        {/* Search Input */}
-        <div className="mb-4">
+
+        {/* List of orders */}
+        <div className="overflow-hidden rounded-lg shadow mb-8">
           <input
             type="text"
-            placeholder="Search by customer, email, item, etc..."
-            className="w-full md:w-1/2 px-4 py-2 border border-gray-300 rounded-lg"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search orders..."
+            className="p-2 w-full border-b-2 border-gray-300"
           />
-        </div>
-        {/* Table */}
-        <div className="bg-white shadow-lg rounded-lg p-6">
-          <h3 className="text-xl font-medium mb-4">Purchase Orders List</h3>
-          <table className="w-full table-auto border-collapse">
+          <table className="min-w-full">
             <thead>
-              <tr className="bg-gray-100 text-left">
-                {[
-                  "Customer",
-                  "Mobile",
-                  "Email",
-                  "Price",
-                  "Quantity",
-                  "Item",
-                  "Status",
-                  "Actions",
-                ].map((th) => (
-                  <th
-                    key={th}
-                    className="px-4 py-2 text-sm font-medium text-gray-700"
-                  >
-                    {th}
-                  </th>
-                ))}
+              <tr>
+                <th className="px-6 py-3 text-left">Ref. No</th>
+                <th className="px-6 py-3 text-left">Customer</th>
+                <th className="px-6 py-3 text-left">Mobile</th>
+                <th className="px-6 py-3 text-left">Item Name</th>
+                <th className="px-6 py-3 text-left">Price</th>
+                <th className="px-6 py-3 text-left">Quantity</th>
+                <th className="px-6 py-3 text-left">Status</th>
+                <th className="px-6 py-3 text-left">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {filteredOrders.length > 0 ? (
-                filteredOrders.map((order) => (
-                  <tr key={order.uuid} className="border-b hover:bg-gray-50">
-                    <td className="px-4 py-2 text-sm text-gray-700">
-                      {order.customerName}
-                    </td>
-                    <td className="px-4 py-2 text-sm text-gray-700">
-                      {order.mobile}
-                    </td>
-                    <td className="px-4 py-2 text-sm text-gray-700">
-                      {order.email}
-                    </td>
-                    <td className="px-4 py-2 text-sm text-gray-700">
-                      {order.price}
-                    </td>
-                    <td className="px-4 py-2 text-sm text-gray-700">
-                      {order.quantity}
-                    </td>
-                    <td className="px-4 py-2 text-sm text-gray-700">
-                      {order.itemName}
-                    </td>
-                    <td className="px-4 py-2 text-sm text-gray-700">
-                      {order.status || "Pending"}
-                    </td>
-                    <td className="px-4 py-2 text-sm text-gray-700 flex gap-4">
+              {filteredOrders.map((order) => (
+                <tr key={order.uuid}>
+                  <td className="px-6 py-4">{order.refNo}</td>
+                  <td className="px-6 py-4">{order.customerName}</td>
+                  <td className="px-6 py-4">{order.mobile}</td>
+                  <td className="px-6 py-4">{order.itemName}</td>
+                  <td className="px-6 py-4">{order.price}</td>
+                  <td className="px-6 py-4">{order.quantity}</td>
+                  <td className="px-6 py-4">{order.status}</td>
+                  <td className="px-6 py-4">
                       <button
                         onClick={() => handleEditClick(order)}
-                        className="text-blue-600 hover:text-blue-800"
+                      className="text-blue-600 hover:underline mr-2"
                       >
                         Edit
                       </button>
                       <button
                         onClick={() => handleDeleteClick(order)}
-                        className="text-red-600 hover:text-red-800"
+                      className="text-red-600 hover:underline"
                       >
                         Delete
                       </button>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td
-                    colSpan={8}
-                    className="px-4 py-2 text-sm text-center text-gray-500"
-                  >
-                    No purchase orders found.
                   </td>
                 </tr>
-              )}
+              ))}
             </tbody>
           </table>
         </div>
 
-        {/* Delete Confirmation Modal */}
         {deletePopup && (
           <ConfirmModal
             isOpen={deletePopup}
-            message={`Are you sure you want to delete ?`}
             onConfirm={confirmDelete}
             onCancel={cancelDelete}
+            message="Are you sure you want to delete this purchase order?"
           />
         )}
       </div>
