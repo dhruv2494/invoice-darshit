@@ -2,8 +2,17 @@
 
 
 .horizontal-scroll {
-    overflow-x: auto;  /* Enables horizontal scrolling */
-    white-space: nowrap; /* Prevents line breaks, forcing items to stay on one line */
-    width: 100%; /* You can adjust the width as needed */
+  overflow-x: auto;
+  white-space: nowrap;
+  width: 100%;
+}
+
+.component-render-div {
+  max-width: 100%;
+}
+
+@media (min-width: 768px) {
+  .component-render-div {
+    max-width: calc(100% - 256px);
   }
-  
+}

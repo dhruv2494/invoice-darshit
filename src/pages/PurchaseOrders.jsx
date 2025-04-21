@@ -301,57 +301,91 @@ const PurchaseOrders = () => {
         )}
 
         {/* List of orders */}
-        <div className="overflow-x-auto rounded-xl shadow-lg border border-gray-200 mb-8">
-  <input
-    type="text"
-    value={searchTerm}
-    onChange={(e) => setSearchTerm(e.target.value)}
-    placeholder="Search orders..."
-    className="p-3 w-full border-b border-gray-200 focus:outline-none focus:ring-2 focus:ring-sky-400"
-  />
-  <table className="min-w-full divide-y divide-gray-200">
-    <thead className="bg-gray-100">
-      <tr>
-        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Ref. No</th>
-        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Customer</th>
-        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Mobile</th>
-        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Item Name</th>
-        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Price</th>
-        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Quantity</th>
-        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
-        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Actions</th>
-      </tr>
-    </thead>
-    <tbody className="bg-white divide-y divide-gray-100">
-      {filteredOrders.map((order) => (
-        <tr key={order.uuid} className="hover:bg-sky-50 transition-colors duration-200">
-          <td className="px-6 py-4 text-sm text-gray-700">{order.refNo}</td>
-          <td className="px-6 py-4 text-sm text-gray-700">{order.customerName}</td>
-          <td className="px-6 py-4 text-sm text-gray-700">{order.mobile}</td>
-          <td className="px-6 py-4 text-sm text-gray-700">{order.itemName}</td>
-          <td className="px-6 py-4 text-sm text-gray-700">{order.price}</td>
-          <td className="px-6 py-4 text-sm text-gray-700">{order.quantity}</td>
-          <td className="px-6 py-4 text-sm text-indigo-600 font-medium">{order.status}</td>
-          <td className="px-6 py-4">
-            <button
-              onClick={() => handleEditClick(order)}
-              className="text-sky-600 hover:text-sky-800 font-medium mr-4 cursor-pointer transition-colors"
-            >
-              Edit
-            </button>
-            <button
-              onClick={() => handleDeleteClick(order)}
-              className="text-rose-600 hover:text-rose-800 font-medium cursor-pointer transition-colors"
-            >
-              Delete
-            </button>
-          </td>
-        </tr>
-      ))}
-    </tbody>
-  </table>
-</div>
-
+        <div className="rounded-xl shadow-lg border border-gray-200 mb-8">
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search orders..."
+            className="p-3 w-full border-b border-gray-200 focus:outline-none focus:ring-2 focus:ring-sky-400"
+          />
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+                    Ref. No
+                  </th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+                    Customer
+                  </th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+                    Mobile
+                  </th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+                    Item Name
+                  </th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+                    Price
+                  </th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+                    Quantity
+                  </th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-100">
+                {filteredOrders.map((order) => (
+                  <tr
+                    key={order.uuid}
+                    className="hover:bg-sky-50 transition-colors duration-200"
+                  >
+                    <td className="px-6 py-4 text-sm text-gray-700">
+                      {order.refNo}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700">
+                      {order.customerName}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700">
+                      {order.mobile}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700">
+                      {order.itemName}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700">
+                      {order.price}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700">
+                      {order.quantity}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-indigo-600 font-medium">
+                      {order.status}
+                    </td>
+                    <td className="px-6 py-4 w-fit flex">
+                      <button
+                        onClick={() => handleEditClick(order)}
+                        className="text-sky-600 hover:text-sky-800 font-medium mr-4 cursor-pointer transition-colors"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDeleteClick(order)}
+                        className="text-rose-600 hover:text-rose-800 font-medium cursor-pointer transition-colors"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
 
         {deletePopup && (
           <ConfirmModal

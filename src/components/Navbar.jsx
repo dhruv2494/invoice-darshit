@@ -18,7 +18,7 @@ const Navbar = ({ toggleSidebar }) => {
             <FaBars className="text-2xl" />
           </button>
         )}
-        <h1 className="text-xl font-bold text-gray-800 tracking-wide">Admin Dashboard</h1>
+        <h1 className="text-xl font-bold text-gray-800 tracking-wide">Hello Admin</h1>
       </div>
       <button
         onClick={handleLogout}

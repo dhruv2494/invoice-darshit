@@ -25,13 +25,13 @@ const DashboardLayout = ({ children }) => {
         />
       </div>
       {/* Main content */}
-      <div className="flex flex-col flex-1">
+      <div className="flex flex-col flex-1 component-render-div">
         <Navbar toggleSidebar={() => setSidebarOpen(!isSidebarOpen)} />
         <main
           className="p-6"
           style={{
             height: "100dvh",
-            overflow:"scroll"
+            overflow: "scroll",
           }}
         >
           {children}
