@@ -29,13 +29,16 @@ const validationSchema = Yup.object({
 
 const PurchaseOrders = () => {
   const dispatch = useDispatch();
-  const { purchaseOrders, status } = useSelector((state) => state.purchaseOrder);
+  const { purchaseOrders, status } = useSelector(
+    (state) => state.purchaseOrder
+  );
   const customers = useSelector((state) => state.customer.customers);
 
   const [editingOrder, setEditingOrder] = useState(null);
   const [deletePopup, setDeletePopup] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     dispatch(getCustomers());
@@ -79,11 +82,25 @@ const PurchaseOrders = () => {
     setOrderToDelete(null);
   };
 
+  // Filtered orders based on search
+  const filteredOrders = purchaseOrders.filter((order) => {
+    const lowerSearch = searchTerm.toLowerCase();
+    return (
+      order.customerName?.toLowerCase().includes(lowerSearch) ||
+      order.mobile?.toLowerCase().includes(lowerSearch) ||
+      order.email?.toLowerCase().includes(lowerSearch) ||
+      order.itemName?.toLowerCase().includes(lowerSearch) ||
+      String(order.price)?.toLowerCase().includes(lowerSearch) || // Convert price to string
+      String(order.quantity)?.toLowerCase().includes(lowerSearch) || // Convert quantity to string
+      order.status?.toLowerCase().includes(lowerSearch)
+    );
+  });
+  
+
   return (
     <DashboardLayout>
       <div className="px-6 py-4">
         <h2 className="text-3xl font-semibold mb-6">Purchase Orders</h2>
-
         <button
           onClick={handleAddClick}
           className="mb-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
@@ -91,6 +108,9 @@ const PurchaseOrders = () => {
           Add Purchase Order
         </button>
 
+
+
+        {/* Form */}
         {showForm && (
           <div className="bg-white shadow-lg rounded-lg p-6 mb-8">
             <h3 className="text-xl font-medium mb-4">
@@ -114,7 +134,6 @@ const PurchaseOrders = () => {
               {({ setFieldValue }) => (
                 <Form>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {/* Customer Dropdown */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700">
                         Customer
@@ -145,10 +164,14 @@ const PurchaseOrders = () => {
                           </option>
                         ))}
                       </Field>
-                      <ErrorMessage name="customer" component="div" className="text-red-500 text-sm" />
+                      <ErrorMessage
+                        name="customer"
+                        component="div"
+                        className="text-red-500 text-sm"
+                      />
                     </div>
 
-                    {/* Mobile and Email */}
+                    {/* Mobile, Email, Price, Quantity, Item Name, Status */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700">
                         Mobile
@@ -171,8 +194,6 @@ const PurchaseOrders = () => {
                         disabled
                       />
                     </div>
-
-                    {/* Price */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700">
                         Price
@@ -182,10 +203,12 @@ const PurchaseOrders = () => {
                         name="price"
                         className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg"
                       />
-                      <ErrorMessage name="price" component="div" className="text-red-500 text-sm" />
+                      <ErrorMessage
+                        name="price"
+                        component="div"
+                        className="text-red-500 text-sm"
+                      />
                     </div>
-
-                    {/* Quantity */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700">
                         Quantity
@@ -195,10 +218,12 @@ const PurchaseOrders = () => {
                         name="quantity"
                         className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg"
                       />
-                      <ErrorMessage name="quantity" component="div" className="text-red-500 text-sm" />
+                      <ErrorMessage
+                        name="quantity"
+                        component="div"
+                        className="text-red-500 text-sm"
+                      />
                     </div>
-
-                    {/* Item Name */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700">
                         Item Name
@@ -208,10 +233,12 @@ const PurchaseOrders = () => {
                         name="itemName"
                         className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg"
                       />
-                      <ErrorMessage name="itemName" component="div" className="text-red-500 text-sm" />
+                      <ErrorMessage
+                        name="itemName"
+                        component="div"
+                        className="text-red-500 text-sm"
+                      />
                     </div>
-
-                    {/* Status */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700">
                         Status
@@ -228,7 +255,11 @@ const PurchaseOrders = () => {
                           </option>
                         ))}
                       </Field>
-                      <ErrorMessage name="status" component="div" className="text-red-500 text-sm" />
+                      <ErrorMessage
+                        name="status"
+                        component="div"
+                        className="text-red-500 text-sm"
+                      />
                     </div>
                   </div>
 
@@ -252,29 +283,66 @@ const PurchaseOrders = () => {
             </Formik>
           </div>
         )}
-
+        {/* Search Input */}
+        <div className="mb-4">
+          <input
+            type="text"
+            placeholder="Search by customer, email, item, etc..."
+            className="w-full md:w-1/2 px-4 py-2 border border-gray-300 rounded-lg"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
         {/* Table */}
         <div className="bg-white shadow-lg rounded-lg p-6">
           <h3 className="text-xl font-medium mb-4">Purchase Orders List</h3>
           <table className="w-full table-auto border-collapse">
             <thead>
               <tr className="bg-gray-100 text-left">
-                {["Customer", "Mobile", "Email", "Price", "Quantity", "Item", "Status", "Actions"].map((th) => (
-                  <th key={th} className="px-4 py-2 text-sm font-medium text-gray-700">{th}</th>
+                {[
+                  "Customer",
+                  "Mobile",
+                  "Email",
+                  "Price",
+                  "Quantity",
+                  "Item",
+                  "Status",
+                  "Actions",
+                ].map((th) => (
+                  <th
+                    key={th}
+                    className="px-4 py-2 text-sm font-medium text-gray-700"
+                  >
+                    {th}
+                  </th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {purchaseOrders.length > 0 ? (
-                purchaseOrders.map((order) => (
+              {filteredOrders.length > 0 ? (
+                filteredOrders.map((order) => (
                   <tr key={order.uuid} className="border-b hover:bg-gray-50">
-                    <td className="px-4 py-2 text-sm text-gray-700">{order.customer}</td>
-                    <td className="px-4 py-2 text-sm text-gray-700">{order.mobile}</td>
-                    <td className="px-4 py-2 text-sm text-gray-700">{order.email}</td>
-                    <td className="px-4 py-2 text-sm text-gray-700">{order.price}</td>
-                    <td className="px-4 py-2 text-sm text-gray-700">{order.quantity}</td>
-                    <td className="px-4 py-2 text-sm text-gray-700">{order.itemName}</td>
-                    <td className="px-4 py-2 text-sm text-gray-700">{order.status}</td>
+                    <td className="px-4 py-2 text-sm text-gray-700">
+                      {order.customerName}
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-700">
+                      {order.mobile}
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-700">
+                      {order.email}
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-700">
+                      {order.price}
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-700">
+                      {order.quantity}
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-700">
+                      {order.itemName}
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-700">
+                      {order.status || "Pending"}
+                    </td>
                     <td className="px-4 py-2 text-sm text-gray-700 flex gap-4">
                       <button
                         onClick={() => handleEditClick(order)}
@@ -293,7 +361,10 @@ const PurchaseOrders = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={8} className="px-4 py-2 text-sm text-center text-gray-500">
+                  <td
+                    colSpan={8}
+                    className="px-4 py-2 text-sm text-center text-gray-500"
+                  >
                     No purchase orders found.
                   </td>
                 </tr>
@@ -301,16 +372,17 @@ const PurchaseOrders = () => {
             </tbody>
           </table>
         </div>
-      </div>
 
-      {/* Confirm Deletion Modal */}
-      <ConfirmModal
-        isOpen={deletePopup}
-        title="Confirm Deletion"
-        message={`Are you sure you want to delete "${orderToDelete?.customer}"?`}
-        onCancel={cancelDelete}
-        onConfirm={confirmDelete}
-      />
+        {/* Delete Confirmation Modal */}
+        {deletePopup && (
+          <ConfirmModal
+            isOpen={deletePopup}
+            message={`Are you sure you want to delete ?`}
+            onConfirm={confirmDelete}
+            onCancel={cancelDelete}
+          />
+        )}
+      </div>
     </DashboardLayout>
   );
 };
