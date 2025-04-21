@@ -97,6 +97,7 @@ const PurchaseOrders = () => {
       order.itemName?.toLowerCase().includes(lowerSearch) ||
       String(order.price)?.toLowerCase().includes(lowerSearch) ||
       String(order.quantity)?.toLowerCase().includes(lowerSearch) ||
+      String(order.refNo)?.toLowerCase().includes(lowerSearch) ||
       order.status?.toLowerCase().includes(lowerSearch)
     );
   });
@@ -300,56 +301,57 @@ const PurchaseOrders = () => {
         )}
 
         {/* List of orders */}
-        <div className="overflow-hidden rounded-lg shadow mb-8">
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search orders..."
-            className="p-2 w-full border-b-2 border-gray-300"
-          />
-          <table className="min-w-full">
-            <thead>
-              <tr>
-                <th className="px-6 py-3 text-left">Ref. No</th>
-                <th className="px-6 py-3 text-left">Customer</th>
-                <th className="px-6 py-3 text-left">Mobile</th>
-                <th className="px-6 py-3 text-left">Item Name</th>
-                <th className="px-6 py-3 text-left">Price</th>
-                <th className="px-6 py-3 text-left">Quantity</th>
-                <th className="px-6 py-3 text-left">Status</th>
-                <th className="px-6 py-3 text-left">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredOrders.map((order) => (
-                <tr key={order.uuid}>
-                  <td className="px-6 py-4">{order.refNo}</td>
-                  <td className="px-6 py-4">{order.customerName}</td>
-                  <td className="px-6 py-4">{order.mobile}</td>
-                  <td className="px-6 py-4">{order.itemName}</td>
-                  <td className="px-6 py-4">{order.price}</td>
-                  <td className="px-6 py-4">{order.quantity}</td>
-                  <td className="px-6 py-4">{order.status}</td>
-                  <td className="px-6 py-4">
-                      <button
-                        onClick={() => handleEditClick(order)}
-                      className="text-blue-600 hover:underline mr-2"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDeleteClick(order)}
-                      className="text-red-600 hover:underline"
-                      >
-                        Delete
-                      </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <div className="overflow-x-auto rounded-xl shadow-lg border border-gray-200 mb-8">
+  <input
+    type="text"
+    value={searchTerm}
+    onChange={(e) => setSearchTerm(e.target.value)}
+    placeholder="Search orders..."
+    className="p-3 w-full border-b border-gray-200 focus:outline-none focus:ring-2 focus:ring-sky-400"
+  />
+  <table className="min-w-full divide-y divide-gray-200">
+    <thead className="bg-gray-100">
+      <tr>
+        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Ref. No</th>
+        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Customer</th>
+        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Mobile</th>
+        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Item Name</th>
+        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Price</th>
+        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Quantity</th>
+        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
+        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Actions</th>
+      </tr>
+    </thead>
+    <tbody className="bg-white divide-y divide-gray-100">
+      {filteredOrders.map((order) => (
+        <tr key={order.uuid} className="hover:bg-sky-50 transition-colors duration-200">
+          <td className="px-6 py-4 text-sm text-gray-700">{order.refNo}</td>
+          <td className="px-6 py-4 text-sm text-gray-700">{order.customerName}</td>
+          <td className="px-6 py-4 text-sm text-gray-700">{order.mobile}</td>
+          <td className="px-6 py-4 text-sm text-gray-700">{order.itemName}</td>
+          <td className="px-6 py-4 text-sm text-gray-700">{order.price}</td>
+          <td className="px-6 py-4 text-sm text-gray-700">{order.quantity}</td>
+          <td className="px-6 py-4 text-sm text-indigo-600 font-medium">{order.status}</td>
+          <td className="px-6 py-4">
+            <button
+              onClick={() => handleEditClick(order)}
+              className="text-sky-600 hover:text-sky-800 font-medium mr-4 cursor-pointer transition-colors"
+            >
+              Edit
+            </button>
+            <button
+              onClick={() => handleDeleteClick(order)}
+              className="text-rose-600 hover:text-rose-800 font-medium cursor-pointer transition-colors"
+            >
+              Delete
+            </button>
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
+
 
         {deletePopup && (
           <ConfirmModal

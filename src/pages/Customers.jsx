@@ -32,12 +32,10 @@ const Customers = () => {
     dispatch(getCustomers());
   }, [dispatch]);
 
-  // Handle search query change
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
   };
 
-  // Filter customers based on the search query
   const filteredCustomers = customers.filter(
     (customer) =>
       customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -85,31 +83,20 @@ const Customers = () => {
   return (
     <DashboardLayout>
       <div className="px-6 py-4">
-        <h2 className="text-3xl font-semibold mb-6">Customer Management</h2>
-
-        {/* Search Input */}
-        <div className="mb-6">
-          <input
-            type="text"
-            placeholder="Search by name, email, or mobile..."
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={searchQuery}
-            onChange={handleSearchChange}
-          />
-        </div>
+        <h2 className="text-3xl font-semibold mb-6 text-indigo-700">Customer Management</h2>
 
         {/* Add Customer Button */}
         <button
           onClick={handleAddClick}
-          className="mb-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+          className="mb-6 px-5 py-2.5 bg-emerald-600 text-white font-medium rounded-xl hover:bg-emerald-700 shadow-md transition cursor-pointer"
         >
           Add Customer
         </button>
 
         {/* Add or Edit Customer Form */}
         {showForm && (
-          <div className="bg-white shadow-lg rounded-lg p-6 mb-8">
-            <h3 className="text-xl font-medium mb-4">
+          <div className="bg-white shadow-lg rounded-xl p-6 mb-8 border border-gray-100">
+            <h3 className="text-xl font-medium mb-4 text-indigo-600">
               {editingCustomer ? "Edit Customer" : "Add New Customer"}
             </h3>
             <Formik
@@ -130,7 +117,7 @@ const Customers = () => {
                     <Field
                       type="text"
                       name="name"
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
                       placeholder="Enter name"
                     />
                     <ErrorMessage name="name" component="div" className="text-red-500 text-sm" />
@@ -140,7 +127,7 @@ const Customers = () => {
                     <Field
                       type="text"
                       name="mobile"
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
                       placeholder="Enter mobile number"
                     />
                     <ErrorMessage name="mobile" component="div" className="text-red-500 text-sm" />
@@ -150,23 +137,23 @@ const Customers = () => {
                     <Field
                       type="email"
                       name="email"
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
                       placeholder="Enter email"
                     />
                     <ErrorMessage name="email" component="div" className="text-red-500 text-sm" />
                   </div>
                 </div>
-                <div className="mt-4">
+                <div className="mt-6">
                   <button
                     type="submit"
-                    className="w-full py-2 px-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full py-2 px-4 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 shadow-md transition cursor-pointer"
                   >
                     {editingCustomer ? "Update Customer" : "Add Customer"}
                   </button>
                   <button
                     type="button"
                     onClick={() => setShowForm(false)}
-                    className="w-full mt-2 py-2 px-4 bg-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                    className="w-full mt-2 py-2 px-4 bg-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-300 shadow-sm transition cursor-pointer"
                   >
                     Cancel
                   </button>
@@ -176,35 +163,49 @@ const Customers = () => {
           </div>
         )}
 
+        {/* Search Input */}
+        <div className="mb-6">
+          <input
+            type="text"
+            placeholder="Search by name, email, or mobile..."
+            className="w-full px-4 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+            value={searchQuery}
+            onChange={handleSearchChange}
+          />
+        </div>
+
         {/* Customers Table */}
-        <div className="bg-white shadow-lg rounded-lg p-6">
-          <h3 className="text-xl font-medium mb-4">Customer List</h3>
+        <div className="bg-white shadow-lg rounded-xl p-6 border border-gray-100">
+          <h3 className="text-xl font-medium mb-4 text-indigo-600">Customer List</h3>
           <table className="w-full table-auto border-collapse">
             <thead>
-              <tr className="bg-gray-100 text-left">
-                <th className="px-4 py-2 text-sm font-medium text-gray-700">Name</th>
-                <th className="px-4 py-2 text-sm font-medium text-gray-700">Mobile</th>
-                <th className="px-4 py-2 text-sm font-medium text-gray-700">Email</th>
-                <th className="px-4 py-2 text-sm font-medium text-gray-700">Actions</th>
+              <tr className="bg-gray-100 text-left text-sm text-gray-700 font-semibold">
+                <th className="px-4 py-2">Name</th>
+                <th className="px-4 py-2">Mobile</th>
+                <th className="px-4 py-2">Email</th>
+                <th className="px-4 py-2">Actions</th>
               </tr>
             </thead>
             <tbody>
               {filteredCustomers?.length > 0 ? (
                 filteredCustomers.map((customer) => (
-                  <tr key={customer.uuid} className="border-b hover:bg-gray-50">
+                  <tr
+                    key={customer.uuid}
+                    className="border-b hover:bg-indigo-50 transition"
+                  >
                     <td className="px-4 py-2 text-sm text-gray-700">{customer.name}</td>
                     <td className="px-4 py-2 text-sm text-gray-700">{customer.mobile}</td>
                     <td className="px-4 py-2 text-sm text-gray-700">{customer.email}</td>
-                    <td className="px-4 py-2 text-sm text-gray-700 flex gap-4">
+                    <td className="px-4 py-2 text-sm text-gray-700 flex gap-4 cursor-pointer">
                       <button
                         onClick={() => handleEditClick(customer)}
-                        className="text-blue-600 hover:text-blue-800"
+                        className="text-indigo-600 hover:text-indigo-800 font-medium transition cursor-pointer"
                       >
                         Edit
                       </button>
                       <button
                         onClick={() => handleDeleteClick(customer)}
-                        className="text-red-600 hover:text-red-800"
+                        className="text-rose-600 hover:text-rose-800 font-medium transition cursor-pointer"
                       >
                         Delete
                       </button>
