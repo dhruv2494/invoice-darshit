@@ -1,19 +1,19 @@
 import { useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import API from "../services/api";
 
 const Login = () => {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [username, setUsername] = useState("admin@gmail.com");
+  const [password, setPassword] = useState("admin");
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
-    e.preventDefault();
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/login", {
-        username,
-        password,
+      const res =await API.post("/user/login", {
+        sUserName:username,
+        sPassword:password,
       });
+
       localStorage.setItem("token", res.data.token);
       navigate("/dashboard");
     } catch (err) {
@@ -23,7 +23,7 @@ const Login = () => {
 
   return (
     <div className="h-screen flex items-center justify-center bg-gray-100">
-      <form onSubmit={handleLogin} className="bg-white p-6 rounded w-80 shadow">
+      <div className="bg-white p-6 rounded w-80 shadow">
         <h2 className="text-xl font-bold mb-4 text-center">Admin Login</h2>
         <input
           className="w-full p-2 border mb-3"
@@ -38,10 +38,10 @@ const Login = () => {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
-        <button className="w-full bg-blue-600 text-white py-2 rounded">
+        <button onClick={handleLogin} className="w-full bg-blue-600 text-white py-2 rounded">
           Login
         </button>
-      </form>
+      </div>
     </div>
   );
 };

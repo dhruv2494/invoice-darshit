@@ -6,7 +6,7 @@ const Sidebar = () => {
       <h2 className="text-2xl font-bold mb-6">Admin</h2>
       <Link to="/dashboard" className="mb-3 hover:text-blue-400">Dashboard</Link>
       <Link to="/purchase-orders" className="mb-3 hover:text-blue-400">Purchase Orders</Link>
-      <Link to="/users" className="mb-3 hover:text-blue-400">Users</Link>
+      <Link to="/Customers" className="mb-3 hover:text-blue-400">Customers</Link>
       <Link to="/invoices" className="hover:text-blue-400">Invoices</Link>
     </div>
   );
