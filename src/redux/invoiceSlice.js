@@ -5,7 +5,7 @@ import API from "../services/api"; // use the same API instance as in purchaseOr
 
 // Async thunk to fetch only completed purchase orders
 export const getInvoices = createAsyncThunk("invoice/getAllCompleted", async () => {
-  const response = await API.get("/invoice/get-completed-purchase-orders");
+  const response = await API.get("/po/get-completed-purchase-orders");
   // Filter for only completed purchase orders
   return response?.data?.list
 });

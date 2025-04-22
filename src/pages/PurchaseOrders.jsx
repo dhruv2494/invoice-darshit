@@ -19,7 +19,7 @@ const generateRefNo = () => {
 
 // Validation schema using Yup
 const validationSchema = Yup.object({
-  customer: Yup.string().required("Customer is required"),
+  customerId: Yup.string().required("Customer is required"),
   refNo: Yup.string().required("Reference number is required"),
   mobile: Yup.string()
     .required("Mobile is required")
@@ -120,7 +120,7 @@ const PurchaseOrders = () => {
             </h3>
             <Formik
               initialValues={{
-                customer: editingOrder ? editingOrder.customer : "",
+                customerId: editingOrder ? editingOrder.customerId : "",
                 refNo: editingOrder ? editingOrder.refNo : generateRefNo(),
                 mobile: editingOrder ? editingOrder.mobile : "",
                 email: editingOrder ? editingOrder.email : "",
@@ -159,11 +159,11 @@ const PurchaseOrders = () => {
                       </label>
                       <Field
                         as="select"
-                        name="customer"
+                        name="customerId"
                         className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg"
                         onChange={(e) => {
                           const selectedId = e.target.value;
-                          setFieldValue("customer", selectedId);
+                          setFieldValue("customerId", selectedId);
                           const selectedCustomer = customers.find(
                             (c) => c.uuid === selectedId
                           );
@@ -184,7 +184,7 @@ const PurchaseOrders = () => {
                         ))}
                       </Field>
                       <ErrorMessage
-                        name="customer"
+                        name="customerId"
                         component="div"
                         className="text-red-500 text-sm"
                       />
