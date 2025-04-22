@@ -573,9 +573,6 @@ const Invoices = () => {
                     Email
                   </th>
                   <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                    Item Name
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
                     Gross Weight
                   </th>
                   <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
@@ -641,16 +638,52 @@ const Invoices = () => {
                       {order.mobile}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-700">
-                      {order.itemName}
+                      {order.email}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700">
+                      {order.grossWeight}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700">
+                      {order.tareWeight}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700">
+                      {order.netWeight}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700">
+                      {order.weighingLoss}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700">
+                      {order.container}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700">
+                      {order.weightDeduction}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700">
+                      {order.cleanWeight}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-700">
                       {order.price}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-700">
-                      {order.quantity}
+                      {order.totalAmount}
                     </td>
-                    <td className="px-6 py-4 text-sm text-indigo-600 font-medium">
-                      {order.status}
+                    <td className="px-6 py-4 text-sm text-gray-700">
+                      {order.laborCharges}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700">
+                      {order.netAmount}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700">
+                      {order.deduction}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700">
+                      {order.airLoss}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700">
+                      {order.netDeduction}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700">
+                      {order.oilContentReport}
                     </td>
                     <td className="px-6 py-4 w-fit flex">
                       <button
