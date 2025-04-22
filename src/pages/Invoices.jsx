@@ -152,7 +152,6 @@ const Invoices = () => {
       setFieldValue("mobile", selectedOrder.mobile);
       setFieldValue("uuid", selectedOrder.id);
       setFieldValue("itemName", selectedOrder.itemName);
-
     }
   };
   return (
@@ -562,7 +561,7 @@ const Invoices = () => {
               <thead className="bg-gray-100">
                 <tr>
                   <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                    Ref. No
+                    Po Ref. No
                   </th>
                   <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
                     Customer
@@ -571,16 +570,55 @@ const Invoices = () => {
                     Mobile
                   </th>
                   <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+                    Email
+                  </th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
                     Item Name
+                  </th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+                    Gross Weight
+                  </th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+                    Tare Weight
+                  </th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+                    Net Weight
+                  </th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+                    Weighing Loss
+                  </th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+                    Container
+                  </th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+                    Weight Deduction
+                  </th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+                    Clean Weight
                   </th>
                   <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
                     Price
                   </th>
                   <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                    Quantity
+                    Total Amount
                   </th>
                   <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                    Status
+                    Labor Charges
+                  </th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+                    Net Amount
+                  </th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+                    Deduction
+                  </th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+                    Air Loss
+                  </th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+                    Net Deduction
+                  </th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+                    Oil Content Report
                   </th>
                   <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
                     Actions
