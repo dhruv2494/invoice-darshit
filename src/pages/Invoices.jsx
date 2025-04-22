@@ -11,7 +11,12 @@ import { useDispatch, useSelector } from "react-redux";
 import ConfirmModal from "../components/ConfirmModal";
 import { toast } from "react-toastify";
 import { getCustomers } from "../redux/customerSlice";
-import { getCompletedPurchaseOrder } from "../redux/invoiceSlice";
+import {
+  addEditInvoices,
+  getCompletedPurchaseOrder,
+  getInvoices,
+} from "../redux/invoiceSlice";
+import API from "../services/api";
 
 // Validation schema using Yup
 const validationSchema = Yup.object({
@@ -63,42 +68,36 @@ const validationSchema = Yup.object({
 
 const Invoices = () => {
   const dispatch = useDispatch();
-  const { purchaseOrders, status } = useSelector(
-    (state) => state.purchaseOrder
-  );
   const { completedPurchaseOrder, invoices } = useSelector(
     (state) => state.invoice
   );
-  const customers = useSelector((state) => state.customer.customers);
-  useEffect(() => {
-    dispatch(getCompletedPurchaseOrder());
-  }, [dispatch]);
-  const [editingOrder, setEditingOrder] = useState(null);
+
+  const [editingInvoce, setEditingInvoce] = useState(null);
   const [deletePopup, setDeletePopup] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-
+  console.log(editingInvoce);
   useEffect(() => {
-    dispatch(getCustomers());
-    dispatch(getPurchaseOrders());
+    dispatch(getInvoices());
+    dispatch(getCompletedPurchaseOrder());
   }, [dispatch]);
 
   const handleFormSubmit = (values, { resetForm }) => {
-    dispatch(addEditPurchaseOrder(values));
-    setEditingOrder(null);
+    dispatch(addEditInvoices(values));
+    setEditingInvoce(null);
     resetForm();
     setShowForm(false);
     toast.success("Purchase Order successfully added/updated!");
   };
 
   const handleEditClick = (order) => {
-    setEditingOrder(order);
+    setEditingInvoce(order);
     setShowForm(true);
   };
 
   const handleAddClick = () => {
-    setEditingOrder(null);
+    setEditingInvoce(null);
     setShowForm(true);
   };
 
@@ -120,8 +119,29 @@ const Invoices = () => {
     setDeletePopup(false);
     setOrderToDelete(null);
   };
+  const handleDownload = async (uuid, refNo) => {
+    try {
+      const response = await API.get(`/invoice/download-invoice/${uuid}`, {
+        responseType: "blob", // CRUCIAL: tells Axios to handle binary response
+      });
 
-  const filteredOrders = purchaseOrders?.filter((order) => {
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `Invoice_${refNo}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success("Invoice downloaded successfully!");
+    } catch (error) {
+      console.error("Error downloading invoice:", error);
+      toast.error("Failed to download invoice.");
+    }
+  };
+  const filteredInvoices = invoices?.filter((order) => {
     const lowerSearch = searchTerm.toLowerCase();
     return (
       order.customerName?.toLowerCase().includes(lowerSearch) ||
@@ -145,12 +165,11 @@ const Invoices = () => {
     if (selectedOrder) {
       // Update Formik values with the selected order's details
       setFieldValue("refNo", selectedRefNo);
-      setFieldValue("purchaseOrderId", selectedOrder.id); // Update purchaseOrderId with the selected order's ID
+      setFieldValue("purchaseOrderId", selectedOrder.uuid); // Update purchaseOrderId with the selected order's ID
       setFieldValue("customerId", selectedOrder.customerId);
       setFieldValue("customerName", selectedOrder.customerName);
       setFieldValue("email", selectedOrder.email);
       setFieldValue("mobile", selectedOrder.mobile);
-      setFieldValue("uuid", selectedOrder.id);
       setFieldValue("itemName", selectedOrder.itemName);
     }
   };
@@ -168,33 +187,34 @@ const Invoices = () => {
         {showForm && (
           <div className="bg-white shadow-lg rounded-lg p-6 mb-8">
             <h3 className="text-xl font-medium mb-4">
-              {editingOrder ? "Edit Purchase Order" : "Add New Purchase Order"}
+              {editingInvoce ? "Edit Purchase Order" : "Add New Purchase Order"}
             </h3>
             <Formik
               initialValues={{
-                refNo: editingOrder ? editingOrder.refNo : "",
-                grossWeight: editingOrder ? editingOrder.grossWeight : "",
-                tareWeight: editingOrder ? editingOrder.tareWeight : "",
-                netWeight: editingOrder ? editingOrder.netWeight : "",
-                weighingLoss: editingOrder ? editingOrder.weighingLoss : "",
-                container: editingOrder ? editingOrder.container : "",
-                weightDeduction: editingOrder
-                  ? editingOrder.weightDeduction
+                refNo: editingInvoce ? editingInvoce.refNo : "",
+                grossWeight: editingInvoce ? editingInvoce.grossWeight : "",
+                tareWeight: editingInvoce ? editingInvoce.tareWeight : "",
+                netWeight: editingInvoce ? editingInvoce.netWeight : "",
+                weighingLoss: editingInvoce ? editingInvoce.weighingLoss : "",
+                container: editingInvoce ? editingInvoce.container : "",
+                weightDeduction: editingInvoce
+                  ? editingInvoce.weightDeduction
                   : "",
-                cleanWeight: editingOrder ? editingOrder.cleanWeight : "",
-                price: editingOrder ? editingOrder.price : "",
-                totalAmount: editingOrder ? editingOrder.totalAmount : "",
-                laborCharges: editingOrder ? editingOrder.laborCharges : "",
-                netAmount: editingOrder ? editingOrder.netAmount : "",
-                deduction: editingOrder ? editingOrder.deduction : "",
-                airLoss: editingOrder ? editingOrder.airLoss : "",
-                netDeduction: editingOrder ? editingOrder.netDeduction : "",
-                oilContentReport: editingOrder
-                  ? editingOrder.oilContentReport
+                cleanWeight: editingInvoce ? editingInvoce.cleanWeight : "",
+                price: editingInvoce ? editingInvoce.price : "",
+                totalAmount: editingInvoce ? editingInvoce.totalAmount : "",
+                laborCharges: editingInvoce ? editingInvoce.laborCharges : "",
+                netAmount: editingInvoce ? editingInvoce.netAmount : "",
+                deduction: editingInvoce ? editingInvoce.deduction : "",
+                airLoss: editingInvoce ? editingInvoce.airLoss : "",
+                netDeduction: editingInvoce ? editingInvoce.netDeduction : "",
+                oilContentReport: editingInvoce
+                  ? editingInvoce.oilContentReport
                   : "",
-                customerName: editingOrder ? editingOrder.customerName : "",
-                mobile: editingOrder ? editingOrder.mobile : "",
-                email: editingOrder ? editingOrder.email : "",
+                customerName: editingInvoce ? editingInvoce.customerName : "",
+                mobile: editingInvoce ? editingInvoce.mobile : "",
+                email: editingInvoce ? editingInvoce.email : "",
+                itemName: editingInvoce ? editingInvoce.itemName : "",
               }}
               validationSchema={validationSchema}
               onSubmit={handleFormSubmit}
@@ -248,7 +268,7 @@ const Invoices = () => {
                         Mobile
                       </label>
                       <Field
-                        type="text"
+                        type="number"
                         name="mobile"
                         disabled
                         className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600"
@@ -337,7 +357,7 @@ const Invoices = () => {
                         Weighing Loss
                       </label>
                       <Field
-                        type="text"
+                        type="number"
                         name="weighingLoss"
                         className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg"
                       />
@@ -531,7 +551,7 @@ const Invoices = () => {
                       type="submit"
                       className="w-full py-2 px-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700"
                     >
-                      {editingOrder ? "Update Order" : "Add Order"}
+                      {editingInvoce ? "Update Invoive" : "Add Invoive"}
                     </button>
                     <button
                       type="button"
@@ -623,7 +643,7 @@ const Invoices = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-100">
-                {filteredOrders.map((order) => (
+                {filteredInvoices.map((order) => (
                   <tr
                     key={order.uuid}
                     className="hover:bg-sky-50 transition-colors duration-200"
@@ -694,9 +714,15 @@ const Invoices = () => {
                       </button>
                       <button
                         onClick={() => handleDeleteClick(order)}
-                        className="text-rose-600 hover:text-rose-800 font-medium cursor-pointer transition-colors"
+                        className="text-rose-600 hover:text-rose-800 font-medium mr-4 cursor-pointer transition-colors"
                       >
                         Delete
+                      </button>
+                      <button
+                        onClick={() => handleDownload(order.uuid, order.refNo)}
+                        className="text-sky-600 hover:text-sky-800 font-medium cursor-pointer transition-colors"
+                      >
+                        Download
                       </button>
                     </td>
                   </tr>
