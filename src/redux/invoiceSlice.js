@@ -44,6 +44,14 @@ export const addEditInvoices = createAsyncThunk(
   }
 );
 
+
+export const deleteInvoices = createAsyncThunk("invoice/delete", async (uuid, { dispatch }) => {
+  await API.delete(`/invoice/Delete/${uuid}`);
+  // After the API call, we dispatch getPurchaseOrders to refresh the list
+  dispatch(getInvoices());
+  return uuid;
+});
+
 const invoiceSlice = createSlice({
   name: "invoice",
   initialState: {

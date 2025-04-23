@@ -13,6 +13,7 @@ import { toast } from "react-toastify";
 import { getCustomers } from "../redux/customerSlice";
 import {
   addEditInvoices,
+  deleteInvoices,
   getCompletedPurchaseOrder,
   getInvoices,
 } from "../redux/invoiceSlice";
@@ -92,6 +93,7 @@ const Invoices = () => {
   };
 
   const handleEditClick = (order) => {
+    console.log(order,"orderorder");
     setEditingInvoce(order);
     setShowForm(true);
   };
@@ -108,7 +110,7 @@ const Invoices = () => {
 
   const confirmDelete = () => {
     if (orderToDelete) {
-      dispatch(deletePurchaseOrder(orderToDelete.uuid));
+      dispatch(deleteInvoices(orderToDelete.uuid));
       setDeletePopup(false);
       setOrderToDelete(null);
       toast.success("Purchase Order successfully deleted!");
@@ -191,6 +193,7 @@ const Invoices = () => {
             </h3>
             <Formik
               initialValues={{
+                uuid: editingInvoce ? editingInvoce.uuid : null,
                 refNo: editingInvoce ? editingInvoce.refNo : "",
                 grossWeight: editingInvoce ? editingInvoce.grossWeight : "",
                 tareWeight: editingInvoce ? editingInvoce.tareWeight : "",
@@ -215,6 +218,9 @@ const Invoices = () => {
                 mobile: editingInvoce ? editingInvoce.mobile : "",
                 email: editingInvoce ? editingInvoce.email : "",
                 itemName: editingInvoce ? editingInvoce.itemName : "",
+                purchaseOrderId: editingInvoce ? editingInvoce.purchaseOrderId : null,
+                customerId: editingInvoce ? editingInvoce.customerId : null,
+                
               }}
               validationSchema={validationSchema}
               onSubmit={handleFormSubmit}
@@ -593,6 +599,9 @@ const Invoices = () => {
                     Email
                   </th>
                   <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+                    Item Name
+                  </th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
                     Gross Weight
                   </th>
                   <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
@@ -659,6 +668,9 @@ const Invoices = () => {
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-700">
                       {order.email}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700">
+                      {order.itemName}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-700">
                       {order.grossWeight}
