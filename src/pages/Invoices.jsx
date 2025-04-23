@@ -89,7 +89,7 @@ const Invoices = () => {
     setEditingInvoce(null);
     resetForm();
     setShowForm(false);
-    toast.success("Purchase Order successfully added/updated!");
+    toast.success("Invoice successfully added/updated!");
   };
 
   const handleEditClick = (order) => {
@@ -113,7 +113,7 @@ const Invoices = () => {
       dispatch(deleteInvoices(orderToDelete.uuid));
       setDeletePopup(false);
       setOrderToDelete(null);
-      toast.success("Purchase Order successfully deleted!");
+      toast.success("Invoice successfully deleted!");
     }
   };
 
@@ -143,19 +143,31 @@ const Invoices = () => {
       toast.error("Failed to download invoice.");
     }
   };
-  const filteredInvoices = invoices?.filter((order) => {
-    const lowerSearch = searchTerm.toLowerCase();
-    return (
-      order.customerName?.toLowerCase().includes(lowerSearch) ||
-      order.mobile?.toLowerCase().includes(lowerSearch) ||
-      order.email?.toLowerCase().includes(lowerSearch) ||
-      order.itemName?.toLowerCase().includes(lowerSearch) ||
-      String(order.price)?.toLowerCase().includes(lowerSearch) ||
-      String(order.quantity)?.toLowerCase().includes(lowerSearch) ||
-      String(order.refNo)?.toLowerCase().includes(lowerSearch) ||
-      order.status?.toLowerCase().includes(lowerSearch)
-    );
-  });
+  const filteredInvoices = invoices?.filter((item) => {
+  const lowerSearch = searchTerm.toLowerCase();
+  return (
+    item.refNo?.toLowerCase().includes(lowerSearch) ||
+    item.customerName?.toLowerCase().includes(lowerSearch) ||
+    item.email?.toLowerCase().includes(lowerSearch) ||
+    item.itemName?.toLowerCase().includes(lowerSearch) ||
+    String(item.mobile)?.toLowerCase().includes(lowerSearch) ||
+    String(item.grossWeight)?.toLowerCase().includes(lowerSearch) ||
+    String(item.tareWeight)?.toLowerCase().includes(lowerSearch) ||
+    String(item.netWeight)?.toLowerCase().includes(lowerSearch) ||
+    String(item.weighingLoss)?.toLowerCase().includes(lowerSearch) ||
+    item.container?.toLowerCase().includes(lowerSearch) ||
+    String(item.weightDeduction)?.toLowerCase().includes(lowerSearch) ||
+    String(item.cleanWeight)?.toLowerCase().includes(lowerSearch) ||
+    String(item.price)?.toLowerCase().includes(lowerSearch) ||
+    String(item.totalAmount)?.toLowerCase().includes(lowerSearch) ||
+    String(item.laborCharges)?.toLowerCase().includes(lowerSearch) ||
+    String(item.netAmount)?.toLowerCase().includes(lowerSearch) ||
+    String(item.deduction)?.toLowerCase().includes(lowerSearch) ||
+    String(item.airLoss)?.toLowerCase().includes(lowerSearch) ||
+    String(item.netDeduction)?.toLowerCase().includes(lowerSearch) ||
+    item.oilContentReport?.toLowerCase().includes(lowerSearch)
+  );
+});
   const handlePurchaseOrderChange = (event, setFieldValue) => {
     const selectedRefNo = event.target.value;
 
@@ -178,18 +190,18 @@ const Invoices = () => {
   return (
     <DashboardLayout>
       <div className="px-6 py-4">
-        <h2 className="text-3xl font-semibold mb-6">Purchase Orders</h2>
+        <h2 className="text-3xl font-semibold mb-6">Invoices</h2>
         <button
           onClick={handleAddClick}
           className="mb-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
         >
-          Add Purchase Order
+          Add Invoive
         </button>
 
         {showForm && (
           <div className="bg-white shadow-lg rounded-lg p-6 mb-8">
             <h3 className="text-xl font-medium mb-4">
-              {editingInvoce ? "Edit Purchase Order" : "Add New Purchase Order"}
+              {editingInvoce ? "Edit Invoice" : "Add New Invoice"}
             </h3>
             <Formik
               initialValues={{
@@ -232,7 +244,7 @@ const Invoices = () => {
                     {/* Purchase Order Ref Number */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700">
-                        Purchase Order Ref Number
+                        Completed Purchase Order Ref Number
                       </label>
                       <Field
                         as="select"
@@ -749,7 +761,7 @@ const Invoices = () => {
             isOpen={deletePopup}
             onConfirm={confirmDelete}
             onCancel={cancelDelete}
-            message="Are you sure you want to delete this purchase order?"
+            message="Are you sure you want to delete this Invoice?"
           />
         )}
       </div>
