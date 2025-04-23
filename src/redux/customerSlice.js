@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import API from "../services/api";
+import { showToast } from "../modules/utils";
 
 // ✅ Initial State
 const initialState = {
@@ -31,8 +32,10 @@ export const deleteCustomer = createAsyncThunk(
       await API.delete(`/customercrud/delete/${sCustGUID}`);
       // Refresh list after delete
       dispatch(getCustomers());
+      showToast("Customer successfully deleted!",1)
       return sCustGUID;
     } catch (err) {
+      showToast("Error while delete Customer",2)
       return rejectWithValue(err.response?.data || "Delete failed");
     }
   }
@@ -46,7 +49,9 @@ export const addEditCustomer = createAsyncThunk(
       await API.post("/customercrud/add-update", customerData);
       // Refresh list after add/edit
       dispatch(getCustomers());
+      showToast("Customer successfully added/updated!",1)
     } catch (error) {
+      showToast("Error While added/updated Customer",2)
       return rejectWithValue(error.response?.data || "Add/Edit failed");
     }
   }

@@ -56,7 +56,6 @@ const PurchaseOrders = () => {
     setEditingOrder(null);
     resetForm();
     setShowForm(false);
-    toast.success("Purchase Order successfully added/updated!");
   };
 
   const handleEditClick = (order) => {
@@ -79,7 +78,6 @@ const PurchaseOrders = () => {
       dispatch(deletePurchaseOrder(orderToDelete.uuid));
       setDeletePopup(false);
       setOrderToDelete(null);
-      toast.success("Purchase Order successfully deleted!");
     }
   };
 

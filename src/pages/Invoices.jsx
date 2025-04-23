@@ -18,6 +18,7 @@ import {
   getInvoices,
 } from "../redux/invoiceSlice";
 import API from "../services/api";
+import { showToast } from "../modules/utils";
 
 // Validation schema using Yup
 const validationSchema = Yup.object({
@@ -89,7 +90,6 @@ const Invoices = () => {
     setEditingInvoce(null);
     resetForm();
     setShowForm(false);
-    toast.success("Invoice successfully added/updated!");
   };
 
   const handleEditClick = (order) => {
@@ -113,7 +113,6 @@ const Invoices = () => {
       dispatch(deleteInvoices(orderToDelete.uuid));
       setDeletePopup(false);
       setOrderToDelete(null);
-      toast.success("Invoice successfully deleted!");
     }
   };
 
@@ -137,10 +136,10 @@ const Invoices = () => {
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
-      toast.success("Invoice downloaded successfully!");
+      showToast("Invoice downloaded successfully!",1);
     } catch (error) {
       console.error("Error downloading invoice:", error);
-      toast.error("Failed to download invoice.");
+      showToast("Failed to download invoice.",2);
     }
   };
   const filteredInvoices = invoices?.filter((item) => {

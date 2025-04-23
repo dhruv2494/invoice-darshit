@@ -2,6 +2,7 @@
 
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import API from "../services/api"; // Reusing the same API instance as in purchaseOrderSlice
+import { showToast } from "../modules/utils";
 
 // Async thunk to fetch all completed purchase orders
 export const getCompletedPurchaseOrder = createAsyncThunk(
@@ -37,20 +38,32 @@ export const addEditInvoices = createAsyncThunk(
       const response = await API.post("/invoice/AddUpdate", order);
       // After the API call, refresh the invoice list
       dispatch(getInvoices());
+      showToast("Invoice successfully added/updated!", 1);
+
       return response.data;
     } catch (error) {
+      showToast("Error While add/update! Invoice", 1);
       return rejectWithValue(error.message);
     }
   }
 );
 
+export const deleteInvoices = createAsyncThunk(
+  "invoice/delete",
+  async (uuid, { dispatch }) => {
+    try {
+      await API.delete(`/invoice/Delete/${uuid}`);
+      // After the API call, we dispatch getPurchaseOrders to refresh the list
+      dispatch(getInvoices());
+      showToast("Invoice successfully deleted!",1);
 
-export const deleteInvoices = createAsyncThunk("invoice/delete", async (uuid, { dispatch }) => {
-  await API.delete(`/invoice/Delete/${uuid}`);
-  // After the API call, we dispatch getPurchaseOrders to refresh the list
-  dispatch(getInvoices());
-  return uuid;
-});
+      return uuid;
+    } catch (error) {
+      console.log(error);
+      showToast("error while delete Invoice",2);
+    }
+  }
+);
 
 const invoiceSlice = createSlice({
   name: "invoice",
@@ -76,7 +89,7 @@ const invoiceSlice = createSlice({
         state.loading = false;
         state.error = action.payload || action.error.message; // Handle error properly
       })
-      
+
       // Handle fetching invoices
       .addCase(getInvoices.pending, (state) => {
         state.loading = true;
@@ -99,7 +112,9 @@ const invoiceSlice = createSlice({
       .addCase(addEditInvoices.fulfilled, (state, action) => {
         state.loading = false;
         // Ensure the updated invoice is in the list (or push it if new)
-        const index = state.invoices.findIndex(invoice => invoice.uuid === action.payload.uuid);
+        const index = state.invoices.findIndex(
+          (invoice) => invoice.uuid === action.payload.uuid
+        );
         if (index !== -1) {
           state.invoices[index] = action.payload; // Replace existing
         } else {

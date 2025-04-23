@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../services/api";
+import { showToast } from "../modules/utils";
 
 const Login = () => {
   const [username, setUsername] = useState("admin@gmail.com");
@@ -15,9 +16,10 @@ const Login = () => {
       });
 
       localStorage.setItem("token", res.data.token);
+      showToast("login success",1);
       navigate("/dashboard");
     } catch (err) {
-      alert("Invalid credentials");
+      showToast("Invalid credentials",2);
     }
   };
 

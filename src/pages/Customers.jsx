@@ -52,7 +52,6 @@ const Customers = () => {
     setEditingCustomer(null);
     resetForm();
     setShowForm(false);
-    toast.success("Customer successfully added/updated!");
   };
 
   const handleEditClick = (customer) => {
@@ -75,7 +74,6 @@ const Customers = () => {
       dispatch(deleteCustomer(customerToDelete.uuid));
       setDeletePopup(false);
       setCustomerToDelete(null);
-      toast.success("Customer successfully deleted!");
     }
   };
 
