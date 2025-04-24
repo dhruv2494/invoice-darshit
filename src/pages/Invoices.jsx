@@ -19,6 +19,7 @@ import {
 } from "../redux/invoiceSlice";
 import API from "../services/api";
 import { showToast } from "../modules/utils";
+import Select from "react-select";
 
 // Validation schema using Yup
 const validationSchema = Yup.object({
@@ -186,6 +187,36 @@ const Invoices = () => {
       setFieldValue("itemName", selectedOrder.itemName);
     }
   };
+
+  const CustomSelect = ({ field, form, options }) => {
+    const handleChange = (selectedOption) => {
+      form.setFieldValue(
+        field.name,
+        selectedOption ? selectedOption.value : ""
+      );
+      handlePurchaseOrderChange(
+        { target: { value: selectedOption?.value } },
+        form.setFieldValue
+      );
+    };
+
+    const customOptions = options.map((order) => ({
+      value: order.refNo,
+      label: order.refNo,
+    }));
+
+    return (
+      <Select
+        name={field.name}
+        value={customOptions.find((opt) => opt.value === field.value)}
+        onChange={handleChange}
+        options={customOptions}
+        isClearable
+        className="react-select-container"
+        classNamePrefix="react-select"
+      />
+    );
+  };
   return (
     <DashboardLayout>
       <div className="px-6 py-4">
@@ -247,21 +278,11 @@ const Invoices = () => {
                         Completed Purchase Order Ref Number
                       </label>
                       <Field
-                        as="select"
                         name="refNo"
-                        disabled={false} // You can disable based on your condition, here it's assumed to always be enabled.
-                        onChange={(e) =>
-                          handlePurchaseOrderChange(e, setFieldValue)
-                        } // Call the handler when the value changes
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600"
-                      >
-                        <option value="">Select Purchase Order</option>
-                        {completedPurchaseOrder.map((order) => (
-                          <option key={order.id} value={order.refNo}>
-                            {order.refNo}
-                          </option>
-                        ))}
-                      </Field>
+                        component={CustomSelect}
+                        options={completedPurchaseOrder}
+                      />
+
                       <ErrorMessage
                         name="refNo"
                         component="div"
@@ -770,3 +791,29 @@ const Invoices = () => {
 };
 
 export default Invoices;
+const CustomSelect = ({ field, form, options }) => {
+  const handleChange = (selectedOption) => {
+    form.setFieldValue(field.name, selectedOption ? selectedOption.value : "");
+    handlePurchaseOrderChange(
+      { target: { value: selectedOption?.value } },
+      form.setFieldValue
+    );
+  };
+
+  const customOptions = options.map((order) => ({
+    value: order.refNo,
+    label: order.refNo,
+  }));
+
+  return (
+    <Select
+      name={field.name}
+      value={customOptions.find((opt) => opt.value === field.value)}
+      onChange={handleChange}
+      options={customOptions}
+      isClearable
+      className="react-select-container"
+      classNamePrefix="react-select"
+    />
+  );
+};
