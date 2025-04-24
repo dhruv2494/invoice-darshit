@@ -93,7 +93,7 @@ const Invoices = () => {
   };
 
   const handleEditClick = (order) => {
-    console.log(order,"orderorder");
+    console.log(order, "orderorder");
     setEditingInvoce(order);
     setShowForm(true);
   };
@@ -136,37 +136,37 @@ const Invoices = () => {
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
-      showToast("Invoice downloaded successfully!",1);
+      showToast("Invoice downloaded successfully!", 1);
     } catch (error) {
       console.error("Error downloading invoice:", error);
-      showToast("Failed to download invoice.",2);
+      showToast("Failed to download invoice.", 2);
     }
   };
   const filteredInvoices = invoices?.filter((item) => {
-  const lowerSearch = searchTerm.toLowerCase();
-  return (
-    item.refNo?.toLowerCase().includes(lowerSearch) ||
-    item.customerName?.toLowerCase().includes(lowerSearch) ||
-    item.email?.toLowerCase().includes(lowerSearch) ||
-    item.itemName?.toLowerCase().includes(lowerSearch) ||
-    String(item.mobile)?.toLowerCase().includes(lowerSearch) ||
-    String(item.grossWeight)?.toLowerCase().includes(lowerSearch) ||
-    String(item.tareWeight)?.toLowerCase().includes(lowerSearch) ||
-    String(item.netWeight)?.toLowerCase().includes(lowerSearch) ||
-    String(item.weighingLoss)?.toLowerCase().includes(lowerSearch) ||
-    item.container?.toLowerCase().includes(lowerSearch) ||
-    String(item.weightDeduction)?.toLowerCase().includes(lowerSearch) ||
-    String(item.cleanWeight)?.toLowerCase().includes(lowerSearch) ||
-    String(item.price)?.toLowerCase().includes(lowerSearch) ||
-    String(item.totalAmount)?.toLowerCase().includes(lowerSearch) ||
-    String(item.laborCharges)?.toLowerCase().includes(lowerSearch) ||
-    String(item.netAmount)?.toLowerCase().includes(lowerSearch) ||
-    String(item.deduction)?.toLowerCase().includes(lowerSearch) ||
-    String(item.airLoss)?.toLowerCase().includes(lowerSearch) ||
-    String(item.netDeduction)?.toLowerCase().includes(lowerSearch) ||
-    item.oilContentReport?.toLowerCase().includes(lowerSearch)
-  );
-});
+    const lowerSearch = searchTerm.toLowerCase();
+    return (
+      item.refNo?.toLowerCase().includes(lowerSearch) ||
+      item.customerName?.toLowerCase().includes(lowerSearch) ||
+      item.address?.toLowerCase().includes(lowerSearch) ||
+      item.itemName?.toLowerCase().includes(lowerSearch) ||
+      String(item.mobile)?.toLowerCase().includes(lowerSearch) ||
+      String(item.grossWeight)?.toLowerCase().includes(lowerSearch) ||
+      String(item.tareWeight)?.toLowerCase().includes(lowerSearch) ||
+      String(item.netWeight)?.toLowerCase().includes(lowerSearch) ||
+      String(item.weighingLoss)?.toLowerCase().includes(lowerSearch) ||
+      item.container?.toLowerCase().includes(lowerSearch) ||
+      String(item.weightDeduction)?.toLowerCase().includes(lowerSearch) ||
+      String(item.cleanWeight)?.toLowerCase().includes(lowerSearch) ||
+      String(item.price)?.toLowerCase().includes(lowerSearch) ||
+      String(item.totalAmount)?.toLowerCase().includes(lowerSearch) ||
+      String(item.laborCharges)?.toLowerCase().includes(lowerSearch) ||
+      String(item.netAmount)?.toLowerCase().includes(lowerSearch) ||
+      String(item.deduction)?.toLowerCase().includes(lowerSearch) ||
+      String(item.airLoss)?.toLowerCase().includes(lowerSearch) ||
+      String(item.netDeduction)?.toLowerCase().includes(lowerSearch) ||
+      item.oilContentReport?.toLowerCase().includes(lowerSearch)
+    );
+  });
   const handlePurchaseOrderChange = (event, setFieldValue) => {
     const selectedRefNo = event.target.value;
 
@@ -181,7 +181,7 @@ const Invoices = () => {
       setFieldValue("purchaseOrderId", selectedOrder.uuid); // Update purchaseOrderId with the selected order's ID
       setFieldValue("customerId", selectedOrder.customerId);
       setFieldValue("customerName", selectedOrder.customerName);
-      setFieldValue("email", selectedOrder.email);
+      setFieldValue("address", selectedOrder.address);
       setFieldValue("mobile", selectedOrder.mobile);
       setFieldValue("itemName", selectedOrder.itemName);
     }
@@ -227,11 +227,12 @@ const Invoices = () => {
                   : "",
                 customerName: editingInvoce ? editingInvoce.customerName : "",
                 mobile: editingInvoce ? editingInvoce.mobile : "",
-                email: editingInvoce ? editingInvoce.email : "",
+                address: editingInvoce ? editingInvoce.address : "",
                 itemName: editingInvoce ? editingInvoce.itemName : "",
-                purchaseOrderId: editingInvoce ? editingInvoce.purchaseOrderId : null,
+                purchaseOrderId: editingInvoce
+                  ? editingInvoce.purchaseOrderId
+                  : null,
                 customerId: editingInvoce ? editingInvoce.customerId : null,
-                
               }}
               validationSchema={validationSchema}
               onSubmit={handleFormSubmit}
@@ -291,14 +292,14 @@ const Invoices = () => {
                         className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600"
                       />
                     </div>
-                    {/* Email */}
+                    {/* Address */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700">
-                        Email
+                        Address
                       </label>
                       <Field
-                        type="email"
-                        name="email"
+                        type="address"
+                        name="address"
                         disabled
                         className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600"
                       />
@@ -607,7 +608,7 @@ const Invoices = () => {
                     Mobile
                   </th>
                   <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                    Email
+                    Address
                   </th>
                   <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
                     Item Name
@@ -678,7 +679,7 @@ const Invoices = () => {
                       {order.mobile}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-700">
-                      {order.email}
+                      {order.address}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-700">
                       {order.itemName}

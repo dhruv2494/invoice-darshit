@@ -17,9 +17,6 @@ const validationSchema = Yup.object({
   mobile: Yup.string()
     .required("Mobile is required")
     .matches(/^\d+$/, "Mobile must be a valid number"),
-  email: Yup.string()
-    .email("Invalid email format")
-    .required("Email is required"),
 });
 
 const Customers = () => {
@@ -43,7 +40,7 @@ const Customers = () => {
   const filteredCustomers = customers.filter(
     (customer) =>
       customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      customer.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      customer.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
       customer.mobile.includes(searchQuery)
   );
 
@@ -105,7 +102,7 @@ const Customers = () => {
               initialValues={{
                 name: editingCustomer ? editingCustomer.name : "",
                 mobile: editingCustomer ? editingCustomer.mobile : "",
-                email: editingCustomer ? editingCustomer.email : "",
+                address: editingCustomer ? editingCustomer.address : "",
                 uuid: editingCustomer ? editingCustomer.uuid : "",
               }}
               validationSchema={validationSchema}
@@ -148,16 +145,16 @@ const Customers = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700">
-                      Email
+                    Address
                     </label>
                     <Field
-                      type="email"
-                      name="email"
+                      type="address"
+                      name="address"
                       className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
-                      placeholder="Enter email"
+                      placeholder="Enter address"
                     />
                     <ErrorMessage
-                      name="email"
+                      name="address"
                       component="div"
                       className="text-red-500 text-sm"
                     />
@@ -205,7 +202,7 @@ const Customers = () => {
                 <tr className="bg-gray-100 text-left text-sm text-gray-700 font-semibold">
                   <th className="px-4 py-2">Name</th>
                   <th className="px-4 py-2">Mobile</th>
-                  <th className="px-4 py-2">Email</th>
+                  <th className="px-4 py-2">address</th>
                   <th className="px-4 py-2">Actions</th>
                 </tr>
               </thead>
@@ -223,7 +220,7 @@ const Customers = () => {
                         {customer.mobile}
                       </td>
                       <td className="px-4 py-2 text-sm text-gray-700">
-                        {customer.email}
+                        {customer.address}
                       </td>
                       <td className="px-4 py-2 text-sm text-gray-700 flex gap-4 cursor-pointer">
                         <button

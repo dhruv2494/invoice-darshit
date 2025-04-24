@@ -24,9 +24,6 @@ const validationSchema = Yup.object({
   mobile: Yup.string()
     .required("Mobile is required")
     .matches(/^\d+$/, "Mobile must be a valid number"),
-  email: Yup.string()
-    .email("Invalid email format")
-    .required("Email is required"),
   price: Yup.number().required("Price is required").positive(),
   quantity: Yup.number().required("Quantity is required").positive(),
   itemName: Yup.string().required("Item name is required"),
@@ -91,7 +88,7 @@ const PurchaseOrders = () => {
     return (
       order.customerName?.toLowerCase().includes(lowerSearch) ||
       order.mobile?.toLowerCase().includes(lowerSearch) ||
-      order.email?.toLowerCase().includes(lowerSearch) ||
+      order.address?.toLowerCase().includes(lowerSearch) ||
       order.itemName?.toLowerCase().includes(lowerSearch) ||
       String(order.price)?.toLowerCase().includes(lowerSearch) ||
       String(order.quantity)?.toLowerCase().includes(lowerSearch) ||
@@ -121,7 +118,7 @@ const PurchaseOrders = () => {
                 customerId: editingOrder ? editingOrder.customerId : "",
                 refNo: editingOrder ? editingOrder.refNo : generateRefNo(),
                 mobile: editingOrder ? editingOrder.mobile : "",
-                email: editingOrder ? editingOrder.email : "",
+                address: editingOrder ? editingOrder.address : "",
                 price: editingOrder ? editingOrder.price : "",
                 quantity: editingOrder ? editingOrder.quantity : "",
                 itemName: editingOrder ? editingOrder.itemName : "groundnut",
@@ -167,10 +164,10 @@ const PurchaseOrders = () => {
                           );
                           if (selectedCustomer) {
                             setFieldValue("mobile", selectedCustomer.mobile);
-                            setFieldValue("email", selectedCustomer.email);
+                            setFieldValue("address", selectedCustomer.address);
                           } else {
                             setFieldValue("mobile", "");
-                            setFieldValue("email", "");
+                            setFieldValue("address", "");
                           }
                         }}
                       >
@@ -200,11 +197,11 @@ const PurchaseOrders = () => {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700">
-                        Email
+                        Address
                       </label>
                       <Field
-                        type="email"
-                        name="email"
+                        type="address"
+                        name="address"
                         disabled
                         className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600"
                       />
