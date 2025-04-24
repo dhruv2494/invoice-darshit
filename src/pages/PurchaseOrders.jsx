@@ -19,7 +19,7 @@ const generateRefNo = () => {
 
 // Validation schema using Yup
 const validationSchema = Yup.object({
-  customerId: Yup.string().required("Customer is required"),
+  customerName: Yup.string().required("Customer is required"),
   refNo: Yup.string().required("Reference number is required"),
   mobile: Yup.string()
     .required("Mobile is required")
@@ -115,7 +115,7 @@ const PurchaseOrders = () => {
             </h3>
             <Formik
               initialValues={{
-                customerId: editingOrder ? editingOrder.customerId : "",
+                customerName: editingOrder ? editingOrder.customerName : "",
                 refNo: editingOrder ? editingOrder.refNo : generateRefNo(),
                 mobile: editingOrder ? editingOrder.mobile : "",
                 address: editingOrder ? editingOrder.address : "",
@@ -150,36 +150,15 @@ const PurchaseOrders = () => {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700">
-                        Customer
+                        Customer Name
                       </label>
                       <Field
-                        as="select"
-                        name="customerId"
+                        type="text"
+                        name="customerName"
                         className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg"
-                        onChange={(e) => {
-                          const selectedId = e.target.value;
-                          setFieldValue("customerId", selectedId);
-                          const selectedCustomer = customers.find(
-                            (c) => c.uuid === selectedId
-                          );
-                          if (selectedCustomer) {
-                            setFieldValue("mobile", selectedCustomer.mobile);
-                            setFieldValue("address", selectedCustomer.address);
-                          } else {
-                            setFieldValue("mobile", "");
-                            setFieldValue("address", "");
-                          }
-                        }}
-                      >
-                        <option value="">Select Customer</option>
-                        {customers.map((c) => (
-                          <option key={c.uuid} value={c.uuid}>
-                            {c.name}
-                          </option>
-                        ))}
-                      </Field>
+                      />
                       <ErrorMessage
-                        name="customerId"
+                        name="customerName"
                         component="div"
                         className="text-red-500 text-sm"
                       />
@@ -191,8 +170,12 @@ const PurchaseOrders = () => {
                       <Field
                         type="text"
                         name="mobile"
-                        disabled
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600"
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      />
+                      <ErrorMessage
+                        name="mobile"
+                        component="div"
+                        className="text-red-500 text-sm"
                       />
                     </div>
                     <div>
@@ -202,8 +185,12 @@ const PurchaseOrders = () => {
                       <Field
                         type="address"
                         name="address"
-                        disabled
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600"
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      />
+                      <ErrorMessage
+                        name="address"
+                        component="div"
+                        className="text-red-500 text-sm"
                       />
                     </div>
                     <div>
