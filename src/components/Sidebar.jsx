@@ -1,5 +1,12 @@
 import { Link, useLocation } from "react-router-dom";
-import { FaTachometerAlt, FaBoxOpen, FaUsers, FaFileInvoice, FaTimes } from "react-icons/fa";
+import {
+  FaTachometerAlt,
+  FaBoxOpen,
+  FaUsers,
+  FaFileInvoice,
+  FaTimes,
+  FaUsersCog,
+} from "react-icons/fa";
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
   const location = useLocation();
@@ -8,6 +15,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     { name: "Dashboard", path: "/dashboard", icon: <FaTachometerAlt /> },
     { name: "Purchase Orders", path: "/purchase-orders", icon: <FaBoxOpen /> },
     { name: "Customers", path: "/customers", icon: <FaUsers /> },
+    { name: "Customer Details", path: "/customer-details", icon: <FaUsersCog /> },
     { name: "Invoices", path: "/invoices", icon: <FaFileInvoice /> },
   ];
 
@@ -37,7 +45,9 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           </button>
         </div>
         <div className="px-6 py-4">
-          <h2 className="hidden md:block text-3xl font-semibold mb-8 text-center tracking-wide">Admin Panel</h2>
+          <h2 className="hidden md:block text-3xl font-semibold mb-8 text-center tracking-wide">
+            Admin Panel
+          </h2>
           <nav className="flex flex-col gap-4">
             {navItems.map(({ name, path, icon }) => (
               <Link

@@ -6,6 +6,7 @@ import Customers from "../pages/Customers";
 import Invoices from "../pages/Invoices";
 import ProtectedRoute from "../components/ProtectedRoute";
 import Home from "../pages/home";
+import CustomerDetails from "../pages/CustomerDetails";
 
 const RouteContainer = () => {
   return (
@@ -35,6 +36,14 @@ const RouteContainer = () => {
           element={
             <ProtectedRoute>
               <Customers />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/customer-details"
+          element={
+            <ProtectedRoute>
+              <CustomerDetails />
             </ProtectedRoute>
           }
         />

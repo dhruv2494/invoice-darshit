@@ -80,7 +80,6 @@ const Invoices = () => {
   const [orderToDelete, setOrderToDelete] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  console.log(editingInvoce);
   useEffect(() => {
     dispatch(getInvoices());
     dispatch(getCompletedPurchaseOrder());
