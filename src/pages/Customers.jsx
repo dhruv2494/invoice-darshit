@@ -1,15 +1,14 @@
+import { ErrorMessage, Field, Form, Formik } from "formik";
 import { useEffect, useState } from "react";
-import { Formik, Field, Form, ErrorMessage } from "formik";
+import { useDispatch, useSelector } from "react-redux";
 import * as Yup from "yup";
+import ConfirmModal from "../components/ConfirmModal";
 import DashboardLayout from "../components/DashboardLayout";
 import {
   addEditCustomer,
   deleteCustomer,
   getCustomers,
 } from "../redux/customerSlice";
-import { useDispatch, useSelector } from "react-redux";
-import ConfirmModal from "../components/ConfirmModal";
-import { toast } from "react-toastify";
 
 // Validation schema using Yup
 const validationSchema = Yup.object({

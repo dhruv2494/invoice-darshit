@@ -1,19 +1,18 @@
+import { ErrorMessage, Field, Form, Formik } from "formik";
 import { useEffect, useState } from "react";
-import { Formik, Field, Form, ErrorMessage } from "formik";
+import { useDispatch, useSelector } from "react-redux";
+import Select from "react-select";
 import * as Yup from "yup";
 import DashboardLayout from "../components/DashboardLayout";
-import { addEditCustomer } from "../redux/customerSlice";
-import { useDispatch, useSelector } from "react-redux";
-import ConfirmModal from "../components/ConfirmModal";
-import Select from "react-select";
+import { showToast } from "../modules/utils";
 import {
   getCustomersFromDetails,
   getInvoicesFromDetails,
   getPurchaseOrdersFromDetails,
 } from "../redux/customerDetailsSlice";
-import { showToast } from "../modules/utils";
+import { addEditCustomer } from "../redux/customerSlice";
 import API from "../services/api";
-
+import { useNavigate } from "react-router-dom";
 // Validation schema using Yup
 const validationSchema = Yup.object({
   name: Yup.string().required("Name is required"),
@@ -34,7 +33,7 @@ const CustomerDetails = () => {
   }));
   const [searchTerm, setSearchTerm] = useState("");
   const [searchTermForinvoice, setSearchTermForinvoice] = useState("");
-
+  const navigate = useNavigate();
   const [selectedCustomer, setSelectedCustomer] = useState(options[0]);
   const dispatch = useDispatch();
   useEffect(() => {
@@ -95,6 +94,12 @@ const CustomerDetails = () => {
     setShowForm(true);
   };
 
+  const handleViewClick = (invoice) => {
+    navigate(`/invoice-details`,{
+      state: {invoice}
+    });
+  };
+
   const handleDownload = async (uuid, refNo) => {
     try {
       const response = await API.get(`/invoice/download-invoice/${uuid}`, {
@@ -133,7 +138,6 @@ const CustomerDetails = () => {
         <Select
           value={selectedCustomer}
           onChange={(selectedOption) => {
-            console.log("Selected customer:", selectedOption);
             setSelectedCustomer(selectedOption);
           }}
           options={options}
@@ -334,31 +338,7 @@ const CustomerDetails = () => {
                         Mobile
                       </th>
                       <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                        Address
-                      </th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
                         Item Name
-                      </th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                        Gross Weight
-                      </th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                        Tare Weight
-                      </th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                        Net Weight
-                      </th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                        Weighing Loss
-                      </th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                        Container
-                      </th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                        Weight Deduction
-                      </th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                        Clean Weight
                       </th>
                       <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
                         Price
@@ -366,24 +346,7 @@ const CustomerDetails = () => {
                       <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
                         Total Amount
                       </th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                        Labor Charges
-                      </th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                        Net Amount
-                      </th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                        Deduction
-                      </th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                        Air Loss
-                      </th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                        Net Deduction
-                      </th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                        Oil Content Report
-                      </th>
+                     
                       <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
                         Actions
                       </th>
@@ -406,31 +369,7 @@ const CustomerDetails = () => {
                             {invoice.mobile}
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-700">
-                            {invoice.address}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-700">
                             {invoice.itemName}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-700">
-                            {invoice.grossWeight}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-700">
-                            {invoice.tareWeight}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-700">
-                            {invoice.netWeight}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-700">
-                            {invoice.weighingLoss}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-700">
-                            {invoice.container}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-700">
-                            {invoice.weightDeduction}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-700">
-                            {invoice.cleanWeight}
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-700">
                             {invoice.price}
@@ -438,33 +377,22 @@ const CustomerDetails = () => {
                           <td className="px-6 py-4 text-sm text-gray-700">
                             {invoice.totalAmount}
                           </td>
-                          <td className="px-6 py-4 text-sm text-gray-700">
-                            {invoice.laborCharges}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-700">
-                            {invoice.netAmount}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-700">
-                            {invoice.deduction}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-700">
-                            {invoice.airLoss}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-700">
-                            {invoice.netDeduction}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-700">
-                            {invoice.oilContentReport}
-                          </td>
                           <td className="px-6 py-4 w-fit flex">
-                            <button
-                              onClick={() =>
-                                handleDownload(invoice.uuid, invoice.refNo)
-                              }
-                              className="text-sky-600 hover:text-sky-800 font-medium cursor-pointer transition-colors"
-                            >
-                              Download
-                            </button>
+                          <div className="flex space-x-2">
+                        <button
+                          onClick={() => handleViewClick(invoice)}
+                          className="text-blue-600 hover:text-blue-800"
+                        >
+                          View
+                        </button>
+                        <button
+                          onClick={() => handleDownload(invoice.uuid, invoice.refNo)}
+                          className="text-green-600 hover:text-green-800"
+                        >
+                          Download
+                        </button>
+                       
+                      </div>
                           </td>
                         </tr>
                       ))

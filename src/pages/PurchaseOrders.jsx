@@ -11,6 +11,8 @@ import { useDispatch, useSelector } from "react-redux";
 import ConfirmModal from "../components/ConfirmModal";
 import { toast } from "react-toastify";
 import { getCustomers } from "../redux/customerSlice";
+import { getCustomersFromDetails } from "../redux/customerDetailsSlice";
+import Select from "react-select/base";
 
 // Utility function to generate a 7-digit reference number
 const generateRefNo = () => {
@@ -35,17 +37,22 @@ const PurchaseOrders = () => {
   const { purchaseOrders, status } = useSelector(
     (state) => state.purchaseOrder
   );
-  const customers = useSelector((state) => state.customer.customers);
-
+  const { customers } = useSelector((state) => state?.customerDetails);
   const [editingOrder, setEditingOrder] = useState(null);
   const [deletePopup, setDeletePopup] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  // const [selectedCustomer, setSelectedCustomer] = useState({value:"",label:""});
+  const options = customers.map((customer) => ({
+    label: `${customer.name}-${customer.mobile}`,
+    value: customer.uuid,
+  }));
 
   useEffect(() => {
     dispatch(getCustomers());
     dispatch(getPurchaseOrders());
+    dispatch(getCustomersFromDetails());
   }, [dispatch]);
 
   const handleFormSubmit = (values, { resetForm }) => {
@@ -144,6 +151,36 @@ const PurchaseOrders = () => {
                       />
                       <ErrorMessage
                         name="refNo"
+                        component="div"
+                        className="text-red-500 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Customers
+                      </label>
+                      <Field
+                        as="select"
+                        name="customerSelect"
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        onChange={(e) => {
+                          const selectedCustomer = customers.find(c => c.uuid === e.target.value);
+                          if (selectedCustomer) {
+                            setFieldValue("customerName", selectedCustomer.name);
+                            setFieldValue("mobile", selectedCustomer.mobile);
+                            setFieldValue("address", selectedCustomer.address);
+                          }
+                        }}
+                      >
+                        <option value="">Select Customer</option>
+                        {customers.map((s) => (
+                          <option key={s.uuid} value={s.uuid}>
+                            {s.name}-{s.mobile}
+                          </option>
+                        ))}
+                      </Field>
+                      <ErrorMessage
+                        name="customerSelect"
                         component="div"
                         className="text-red-500 text-sm"
                       />

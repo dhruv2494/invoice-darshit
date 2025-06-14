@@ -7,6 +7,7 @@ import Invoices from "../pages/Invoices";
 import ProtectedRoute from "../components/ProtectedRoute";
 import Home from "../pages/home";
 import CustomerDetails from "../pages/CustomerDetails";
+import InvoiceDetails from "../pages/InvoiceDetails";
 
 const RouteContainer = () => {
   return (
@@ -52,6 +53,14 @@ const RouteContainer = () => {
           element={
             <ProtectedRoute>
               <Invoices />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/invoice-details"
+          element={
+            <ProtectedRoute>
+              <InvoiceDetails />
             </ProtectedRoute>
           }
         />

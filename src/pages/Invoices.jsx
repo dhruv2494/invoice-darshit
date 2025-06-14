@@ -20,7 +20,7 @@ import {
 import API from "../services/api";
 import { showToast } from "../modules/utils";
 import Select from "react-select";
-
+import { useNavigate } from "react-router-dom";
 // Validation schema using Yup
 const validationSchema = Yup.object({
   purchaseOrderId: Yup.string().required("Purchase Order ID is required"),
@@ -75,6 +75,7 @@ const Invoices = () => {
     (state) => state.invoice
   );
 
+  const navigate = useNavigate();
   const [editingInvoce, setEditingInvoce] = useState(null);
   const [deletePopup, setDeletePopup] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState(null);
@@ -93,7 +94,6 @@ const Invoices = () => {
   };
 
   const handleEditClick = (order) => {
-    console.log(order, "orderorder");
     setEditingInvoce(order);
     setShowForm(true);
   };
@@ -141,6 +141,12 @@ const Invoices = () => {
       console.error("Error downloading invoice:", error);
       showToast("Failed to download invoice.", 2);
     }
+  };
+
+  const handleViewClick = (invoice) => {
+    navigate(`/invoice-details`,{
+      state: {invoice}
+    });
   };
   const filteredInvoices = invoices?.filter((item) => {
     const lowerSearch = searchTerm.toLowerCase();
@@ -270,7 +276,7 @@ const Invoices = () => {
             >
               {({ setFieldValue }) => (
                 <Form>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Purchase Order Ref Number */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700">
@@ -312,18 +318,6 @@ const Invoices = () => {
                         className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600"
                       />
                     </div>
-                    {/* Address */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">
-                        Address
-                      </label>
-                      <Field
-                        type="address"
-                        name="address"
-                        disabled
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600"
-                      />
-                    </div>
                     {/* Item Name */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700">
@@ -341,10 +335,10 @@ const Invoices = () => {
                         className="text-red-500 text-sm"
                       />
                     </div>
-                    {/* Gross Weight */}
+                    {/* Price */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700">
-                        Gross Weight
+                        Price
                       </label>
                       <Field
                         type="number"
@@ -582,192 +576,89 @@ const Invoices = () => {
                       />
                     </div>
                   </div>
-
-                  {/* Submit and Cancel Buttons */}
-                  <div className="mt-4">
-                    <button
-                      type="submit"
-                      className="w-half mr-4 py-2 px-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700"
-                    >
-                      {editingInvoce ? "Update Invoive" : "Add Invoive"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setShowForm(false)}
-                      className="w-half py-2 px-4 bg-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-400"
-                    >
-                      Cancel
-                    </button>
-                  </div>
+                  <button
+                    type="submit"
+                    className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  >
+                    {editingInvoce ? "Update Invoice" : "Create Invoice"}
+                  </button>
                 </Form>
               )}
             </Formik>
           </div>
         )}
 
-        {/* List of orders */}
-        <div className="rounded-xl shadow-lg border border-gray-200 mb-8">
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search orders..."
-            className="p-3 w-full border-b border-gray-200 focus:outline-none focus:ring-2 focus:ring-sky-400"
-          />
-          <div className="overflow-x-auto">
+        <div className="mt-8">
+          <h3 className="text-xl font-medium mb-4">Invoices</h3>
+          <div className="bg-white shadow-lg rounded-lg">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-100">
+              <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                    Po Ref. No
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    PO Ref No
                   </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Customer
                   </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Mobile
                   </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                    Address
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Item Name
                   </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                    Gross Weight
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                    Tare Weight
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                    Net Weight
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                    Weighing Loss
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                    Container
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                    Weight Deduction
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                    Clean Weight
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Price
                   </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Total Amount
                   </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                    Labor Charges
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                    Net Amount
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                    Deduction
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                    Air Loss
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                    Net Deduction
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                    Oil Content Report
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-100">
-                {filteredInvoices.map((order) => (
-                  <tr
-                    key={order.uuid}
-                    className="hover:bg-sky-50 transition-colors duration-200"
-                  >
-                    <td className="px-6 py-4 text-sm text-gray-700">
-                      {order.refNo}
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredInvoices.map((invoice) => (
+                  <tr key={invoice.uuid}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {invoice.refNo}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-700">
-                      {order.customerName}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {invoice.customerName}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-700">
-                      {order.mobile}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {invoice.mobile}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-700">
-                      {order.address}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {invoice.itemName}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-700">
-                      {order.itemName}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {invoice.price}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-700">
-                      {order.grossWeight}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {invoice.totalAmount}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-700">
-                      {order.tareWeight}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-700">
-                      {order.netWeight}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-700">
-                      {order.weighingLoss}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-700">
-                      {order.container}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-700">
-                      {order.weightDeduction}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-700">
-                      {order.cleanWeight}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-700">
-                      {order.price}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-700">
-                      {order.totalAmount}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-700">
-                      {order.laborCharges}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-700">
-                      {order.netAmount}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-700">
-                      {order.deduction}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-700">
-                      {order.airLoss}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-700">
-                      {order.netDeduction}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-700">
-                      {order.oilContentReport}
-                    </td>
-                    <td className="px-6 py-4 w-fit flex">
-                      <button
-                        onClick={() => handleEditClick(order)}
-                        className="text-sky-600 hover:text-sky-800 font-medium mr-4 cursor-pointer transition-colors"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDeleteClick(order)}
-                        className="text-rose-600 hover:text-rose-800 font-medium mr-4 cursor-pointer transition-colors"
-                      >
-                        Delete
-                      </button>
-                      <button
-                        onClick={() => handleDownload(order.uuid, order.refNo)}
-                        className="text-sky-600 hover:text-sky-800 font-medium cursor-pointer transition-colors"
-                      >
-                        Download
-                      </button>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => handleViewClick(invoice)}
+                          className="text-blue-600 hover:text-blue-800"
+                        >
+                          View
+                        </button>
+                        <button
+                          onClick={() => handleDownload(invoice.uuid, invoice.refNo)}
+                          className="text-green-600 hover:text-green-800"
+                        >
+                          Download
+                        </button>
+                        <button
+                          onClick={() => handleDeleteClick(invoice)}
+                          className="text-red-600 hover:text-red-800"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
