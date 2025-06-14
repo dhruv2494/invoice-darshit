@@ -1,3 +1,4 @@
+// Sidebar.jsx
 import { Link, useLocation } from "react-router-dom";
 import {
   FaTachometerAlt,
@@ -7,8 +8,9 @@ import {
   FaTimes,
   FaUsersCog,
 } from "react-icons/fa";
+import { MdKeyboardDoubleArrowLeft, MdKeyboardDoubleArrowRight } from "react-icons/md";
 
-const Sidebar = ({ isOpen, toggleSidebar }) => {
+const Sidebar = ({ isOpen, toggleSidebar, isCollapsed, toggleCollapse }) => {
   const location = useLocation();
 
   const navItems = [
@@ -21,51 +23,64 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
 
   return (
     <>
-      {/* Overlay for mobile */}
+      {/* Overlay for Mobile */}
       <div
         className={`fixed inset-0 z-40 md:hidden transition-opacity duration-300 ${
           isOpen ? "block" : "hidden"
         }`}
-        style={{
-          backgroundColor: "rgba(0, 0, 0, 0.4)", // Fixed typo here
-        }}
+        style={{ backgroundColor: "rgba(0, 0, 0, 0.4)" }}
         onClick={toggleSidebar}
       ></div>
 
       {/* Sidebar */}
       <div
-        className={`fixed z-50 md:static top-0 left-0 h-full w-64 bg-gradient-to-b from-gray-900 to-gray-800 text-white shadow-lg transform transition-transform duration-300 ease-in-out ${
+        className={`fixed z-50 md:static top-0 left-0  bg-gradient-to-b from-gray-900 to-gray-800 text-white shadow-lg transform transition-transform duration-300 ease-in-out ${
           isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
-        }`}
+        } ${isCollapsed ? "w-20" : "w-64"}`}
       >
-        <div className="flex items-center justify-between px-6 py-4 md:hidden">
-          <h2 className="text-2xl font-bold">Admin</h2>
-          <button onClick={toggleSidebar}>
-            <FaTimes className="text-white text-lg" />
+        {/* Top Section */}
+        <div className="flex items-center justify-between px-4 py-4 border-b border-gray-700">
+          {!isCollapsed ? (
+            <h2 className="text-xl font-bold">Admin Panel</h2>
+          ) : (
+            <h2 className="text-xl font-bold">A</h2>
+          )}
+          <button
+            className="text-white md:hidden"
+            onClick={toggleSidebar}
+          >
+            <FaTimes />
+          </button>
+          <button
+            onClick={toggleCollapse}
+            className="hidden md:block text-gray-400 hover:text-white ml-2"
+          >
+            {isCollapsed ? (
+              <MdKeyboardDoubleArrowRight size={20} />
+            ) : (
+              <MdKeyboardDoubleArrowLeft size={20} />
+            )}
           </button>
         </div>
-        <div className="px-6 py-4">
-          <h2 className="hidden md:block text-3xl font-semibold mb-8 text-center tracking-wide">
-            Admin Panel
-          </h2>
-          <nav className="flex flex-col gap-4">
-            {navItems.map(({ name, path, icon }) => (
-              <Link
-                key={path}
-                to={path}
-                className={`flex items-center gap-4 px-4 py-3 rounded-lg transition-colors duration-300 ${
-                  location.pathname === path
-                    ? "bg-blue-600 text-white shadow-md"
-                    : "hover:bg-gray-700 text-gray-300"
-                }`}
-                onClick={toggleSidebar}
-              >
-                {icon}
-                <span className="text-md">{name}</span>
-              </Link>
-            ))}
-          </nav>
-        </div>
+
+        {/* Nav Items */}
+        <nav className="flex flex-col px-2 py-4 gap-2">
+          {navItems.map(({ name, path, icon }) => (
+            <Link
+              key={path}
+              to={path}
+              onClick={toggleSidebar}
+              className={`flex items-center gap-4 px-4 py-3 rounded-lg transition-colors duration-300 ${
+                location.pathname === path
+                  ? "bg-blue-600 text-white shadow-md"
+                  : "hover:bg-gray-700 text-gray-300"
+              }`}
+            >
+              <span className="text-xl">{icon}</span>
+              {!isCollapsed && <span className="text-md">{name}</span>}
+            </Link>
+          ))}
+        </nav>
       </div>
     </>
   );
