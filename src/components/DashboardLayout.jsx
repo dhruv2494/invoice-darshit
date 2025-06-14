@@ -1,38 +1,28 @@
+// DashboardLayout.jsx
 import Sidebar from "./Sidebar";
 import Navbar from "./Navbar";
 import { useState } from "react";
 
 const DashboardLayout = ({ children }) => {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
+  const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   return (
-    <div
-      className="flex min-h-screen bg-gray-100"
-      style={{
-        height: "100dvh",
-        overflow: "hidden",
-      }}
-    >
+    <div className="flex min-h-screen bg-gray-100">
       {/* Sidebar */}
-      <div
-        style={{
-          height: "100dvh",
-        }}
-      >
-        <Sidebar
-          isOpen={isSidebarOpen}
-          toggleSidebar={() => setSidebarOpen(!isSidebarOpen)}
-        />
-      </div>
+      <Sidebar
+        isOpen={isSidebarOpen}
+        toggleSidebar={() => setSidebarOpen(!isSidebarOpen)}
+        isCollapsed={isSidebarCollapsed}
+        toggleCollapse={() => setSidebarCollapsed(!isSidebarCollapsed)}
+      />
+
       {/* Main content */}
-      <div className="flex flex-col flex-1 component-render-div">
+      <div className="flex flex-col flex-1 min-w-0">
         <Navbar toggleSidebar={() => setSidebarOpen(!isSidebarOpen)} />
         <main
-          className="p-6"
-          style={{
-            height: "100dvh",
-            overflow: "scroll",
-          }}
+          className="p-4 overflow-auto"
+          style={{ height: "90dvh" }}
         >
           {children}
         </main>
