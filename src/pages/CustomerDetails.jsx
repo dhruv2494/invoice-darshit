@@ -212,14 +212,14 @@ const CustomerDetails = () => {
                 <div className="mt-6">
                   <button
                     type="submit"
-                    className="w-full py-2 px-4 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 shadow-md transition cursor-pointer"
+                    className="w-half mr-4 py-2 px-4 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 shadow-md transition cursor-pointer"
                   >
                     {editingCustomer ? "Update Customer" : "Add Customer"}
                   </button>
                   <button
                     type="button"
                     onClick={() => setShowForm(false)}
-                    className="w-full mt-2 py-2 px-4 bg-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-300 shadow-sm transition cursor-pointer"
+                    className="w-half py-2 px-4 bg-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-300 shadow-sm transition cursor-pointer"
                   >
                     Cancel
                   </button>
