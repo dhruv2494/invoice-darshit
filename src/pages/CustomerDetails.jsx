@@ -1,419 +1,489 @@
-import { ErrorMessage, Field, Form, Formik } from "formik";
-import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import Select from "react-select";
-import * as Yup from "yup";
-import DashboardLayout from "../components/DashboardLayout";
-import { showToast } from "../modules/utils";
-import {
-  getCustomersFromDetails,
-  getInvoicesFromDetails,
-  getPurchaseOrdersFromDetails,
-} from "../redux/customerDetailsSlice";
-import { addEditCustomer } from "../redux/customerSlice";
-import API from "../services/api";
-import { useNavigate } from "react-router-dom";
-// Validation schema using Yup
-const validationSchema = Yup.object({
-  name: Yup.string().required("Name is required"),
-  mobile: Yup.string()
-    .required("Mobile is required")
-    .matches(/^\d+$/, "Mobile must be a valid number"),
-});
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { 
+  FiEdit2, 
+  FiPlus, 
+  FiArrowLeft, 
+  FiFileText, 
+  FiShoppingBag,
+  FiPhone,
+  FiMail,
+  FiCreditCard,
+  FiDollarSign,
+  FiCalendar,
+  FiMapPin,
+  FiCalendar as FiCalendarIcon,
+  FiShoppingBag as FiShoppingBagIcon,
+  FiDollarSign as FiDollarSignIcon,
+  FiFileText as FiFileTextIcon
+} from "react-icons/fi";
 
 const CustomerDetails = () => {
-  const { customers, purchaseOrders, invoices } = useSelector(
-    (state) => state?.customerDetails
-  );
-  const [editingCustomer, setEditingCustomer] = useState(null);
-  const [showForm, setShowForm] = useState(false);
-  const options = customers.map((customer) => ({
-    label: `${customer.name}-${customer.mobile}`,
-    value: customer.uuid,
-  }));
-  const [searchTerm, setSearchTerm] = useState("");
-  const [searchTermForinvoice, setSearchTermForinvoice] = useState("");
-  const navigate = useNavigate();
-  const [selectedCustomer, setSelectedCustomer] = useState(options[0]);
-  const dispatch = useDispatch();
-  useEffect(() => {
-    dispatch(getCustomersFromDetails());
-  }, [dispatch]);
-  useEffect(() => {
-    dispatch(getPurchaseOrdersFromDetails(selectedCustomer?.value));
-    dispatch(getInvoicesFromDetails(selectedCustomer?.value));
-  }, [selectedCustomer]);
-
-  const filteredInvoices = invoices?.filter((item) => {
-    const lowerSearch = searchTermForinvoice.toLowerCase();
-    return (
-      item.refNo?.toLowerCase().includes(lowerSearch) ||
-      item.customerName?.toLowerCase().includes(lowerSearch) ||
-      item.address?.toLowerCase().includes(lowerSearch) ||
-      item.itemName?.toLowerCase().includes(lowerSearch) ||
-      String(item.mobile)?.toLowerCase().includes(lowerSearch) ||
-      String(item.grossWeight)?.toLowerCase().includes(lowerSearch) ||
-      String(item.tareWeight)?.toLowerCase().includes(lowerSearch) ||
-      String(item.netWeight)?.toLowerCase().includes(lowerSearch) ||
-      String(item.weighingLoss)?.toLowerCase().includes(lowerSearch) ||
-      item.container?.toLowerCase().includes(lowerSearch) ||
-      String(item.weightDeduction)?.toLowerCase().includes(lowerSearch) ||
-      String(item.cleanWeight)?.toLowerCase().includes(lowerSearch) ||
-      String(item.price)?.toLowerCase().includes(lowerSearch) ||
-      String(item.totalAmount)?.toLowerCase().includes(lowerSearch) ||
-      String(item.laborCharges)?.toLowerCase().includes(lowerSearch) ||
-      String(item.netAmount)?.toLowerCase().includes(lowerSearch) ||
-      String(item.deduction)?.toLowerCase().includes(lowerSearch) ||
-      String(item.airLoss)?.toLowerCase().includes(lowerSearch) ||
-      String(item.netDeduction)?.toLowerCase().includes(lowerSearch) ||
-      item.oilContentReport?.toLowerCase().includes(lowerSearch)
-    );
-  });
-  const filteredOrders = purchaseOrders?.filter((order) => {
-    const lowerSearch = searchTerm.toLowerCase();
-    return (
-      order.customerName?.toLowerCase().includes(lowerSearch) ||
-      order.mobile?.toLowerCase().includes(lowerSearch) ||
-      order.address?.toLowerCase().includes(lowerSearch) ||
-      order.itemName?.toLowerCase().includes(lowerSearch) ||
-      String(order.price)?.toLowerCase().includes(lowerSearch) ||
-      String(order.quantity)?.toLowerCase().includes(lowerSearch) ||
-      String(order.refNo)?.toLowerCase().includes(lowerSearch) ||
-      order.status?.toLowerCase().includes(lowerSearch)
-    );
-  });
-  const handleFormSubmit = (values, { resetForm }) => {
-    dispatch(addEditCustomer(values));
-    setEditingCustomer(null);
-    resetForm();
-    setShowForm(false);
+  const [activeTab, setActiveTab] = useState('purchase-orders');
+  
+    // Mock data
+  const customerData = {
+    id: '1',
+    name: 'John Doe',
+    email: 'john.doe@example.com',
+    mobile: '+1 (555) 123-4567',
+    gstNumber: '22AAAAA0000A1Z5',
+    address: '123 Business St, Suite 100, New York, NY 10001',
+    createdAt: '2023-01-15T00:00:00.000Z',
+    purchaseOrders: [
+      {
+        id: 'PO-1001',
+        date: '2023-06-15',
+        total: 1500.00,
+        status: 'Completed',
+        items: 3
+      },
+      {
+        id: 'PO-1002',
+        date: '2023-05-20',
+        total: 2500.50,
+        status: 'Processing',
+        items: 5
+      }
+    ],
+    invoices: [
+      {
+        id: 'INV-2001',
+        date: '2023-06-20',
+        dueDate: '2023-07-20',
+        total: 1650.00,
+        status: 'Paid',
+        poRef: 'PO-1001'
+      },
+      {
+        id: 'INV-2002',
+        date: '2023-05-25',
+        dueDate: '2023-06-25',
+        total: 2625.53,
+        status: 'Pending',
+        poRef: 'PO-1002'
+      }
+    ]
   };
 
-  const handleAddClick = () => {
-    setEditingCustomer(null);
-    setShowForm(true);
+  const { purchaseOrders, invoices, ...selectedCustomer } = customerData;
+
+  // Format date to readable format
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    const options = { year: 'numeric', month: 'short', day: 'numeric' };
+    return new Date(dateString).toLocaleDateString('en-US', options);
+  };
+
+  // Format currency
+  const formatCurrency = (amount) => {
+    if (amount === undefined || amount === null) return '$0.00';
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(amount);
+  };
+
+  // Event handlers
+  const handleViewPO = (poId) => {
+    console.log('View PO:', poId);
+  };
+
+  const handleViewInvoice = (invoiceId) => {
+    console.log('View Invoice:', invoiceId);
+  };
+
+  const handleDownload = (id, refNo) => {
+    console.log('Download invoice:', id, refNo);
   };
 
   const handleViewClick = (invoice) => {
-    navigate(`/invoice-details`,{
-      state: {invoice}
-    });
+    console.log('View invoice details:', invoice);
   };
 
-  const handleDownload = async (uuid, refNo) => {
-    try {
-      const response = await API.get(`/invoice/download-invoice/${uuid}`, {
-        responseType: "blob", // CRUCIAL: tells Axios to handle binary response
-      });
-
-      const blob = new Blob([response.data], { type: "application/pdf" });
-      const url = window.URL.createObjectURL(blob);
-
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", `Invoice_${refNo}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-      showToast("Invoice downloaded successfully!", 1);
-    } catch (error) {
-      console.error("Error downloading invoice:", error);
-      showToast("Failed to download invoice.", 2);
-    }
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
   };
-  return (
-    <DashboardLayout>
-      <div className="px-6 py-4">
-        <h2 className="text-3xl font-semibold mb-6">Customer Management</h2>
 
-        {/* Add Customer Button */}
-        <button
-          onClick={handleAddClick}
-          className="mb-6 px-5 py-2.5 bg-green-600 text-white font-medium rounded-xl hover:bg-emerald-700 shadow-md transition cursor-pointer"
-        >
-          Add Customer
-        </button>
+  // Using the customer data from our mock data
 
-        <Select
-          value={selectedCustomer}
-          onChange={(selectedOption) => {
-            setSelectedCustomer(selectedOption);
-          }}
-          options={options}
-          isClearable
-          className="react-select-container"
-          classNamePrefix="react-select"
-        />
-        {/* Add or Edit Customer Form */}
-        {showForm && (
-          <div className="bg-white shadow-lg rounded-xl p-6 mb-8 border border-gray-100">
-            <h3 className="text-xl font-medium mb-4 text-indigo-600">
-              {editingCustomer ? "Edit Customer" : "Add New Customer"}
-            </h3>
-            <Formik
-              initialValues={{
-                name: editingCustomer ? editingCustomer.name : "",
-                mobile: editingCustomer ? editingCustomer.mobile : "",
-                address: editingCustomer ? editingCustomer.address : "",
-                uuid: editingCustomer ? editingCustomer.uuid : "",
-              }}
-              validationSchema={validationSchema}
-              onSubmit={handleFormSubmit}
-              enableReinitialize={true}
-            >
-              <Form>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Name
-                    </label>
-                    <Field
-                      type="text"
-                      name="name"
-                      className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
-                      placeholder="Enter name"
-                    />
-                    <ErrorMessage
-                      name="name"
-                      component="div"
-                      className="text-red-500 text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Mobile
-                    </label>
-                    <Field
-                      type="text"
-                      name="mobile"
-                      className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
-                      placeholder="Enter mobile number"
-                    />
-                    <ErrorMessage
-                      name="mobile"
-                      component="div"
-                      className="text-red-500 text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Address
-                    </label>
-                    <Field
-                      type="address"
-                      name="address"
-                      className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
-                      placeholder="Enter address"
-                    />
-                    <ErrorMessage
-                      name="address"
-                      component="div"
-                      className="text-red-500 text-sm"
-                    />
-                  </div>
-                </div>
-                <div className="mt-6">
-                  <button
-                    type="submit"
-                    className="w-half mr-4 py-2 px-4 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 shadow-md transition cursor-pointer"
-                  >
-                    {editingCustomer ? "Update Customer" : "Add Customer"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowForm(false)}
-                    className="w-half py-2 px-4 bg-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-300 shadow-sm transition cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </Form>
-            </Formik>
-          </div>
-        )}
-        {selectedCustomer && (
-          <div className="mt-5">
-            <h2 className="text-3xl font-semibold mb-6">Purchase Orders</h2>
-
-            <div className="rounded-xl shadow-lg border border-gray-200 mb-8">
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search orders..."
-                className="p-3 w-full border-b border-gray-200 focus:outline-none focus:ring-2 focus:ring-sky-400"
-              />
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-100">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                        Ref. No
-                      </th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                        Customer
-                      </th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                        Mobile
-                      </th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                        Item Name
-                      </th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                        Price
-                      </th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                        Quantity
-                      </th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                        Status
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-100">
-                    {filteredOrders?.length > 0 ? (
-                      filteredOrders.map((order) => (
-                        <tr
-                          key={order.uuid}
-                          className="hover:bg-sky-50 transition-colors duration-200"
-                        >
-                          <td className="px-6 py-4 text-sm text-gray-700">
-                            {order.refNo}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-700">
-                            {order.customerName}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-700">
-                            {order.mobile}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-700">
-                            {order.itemName}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-700">
-                            {order.price}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-700">
-                            {order.quantity}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-indigo-600 font-medium">
-                            {order.status}
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td
-                          colSpan={7} // Update to match the total number of columns in your table
-                          className="px-4 py-2 text-sm text-center text-gray-500"
-                        >
-                          No orders found.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-            <h2 className="text-3xl font-semibold mb-6">Invoices</h2>
-            <div className="rounded-xl shadow-lg border border-gray-200 mb-8">
-              <input
-                type="text"
-                value={searchTermForinvoice}
-                onChange={(e) => setSearchTermForinvoice(e.target.value)}
-                placeholder="Search orders..."
-                className="p-3 w-full border-b border-gray-200 focus:outline-none focus:ring-2 focus:ring-sky-400"
-              />
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-100">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                        Po Ref. No
-                      </th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                        Customer
-                      </th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                        Mobile
-                      </th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                        Item Name
-                      </th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                        Price
-                      </th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                        Total Amount
-                      </th>
-                     
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-100">
-                    {filteredInvoices?.length > 0 ? (
-                      filteredInvoices.map((invoice) => (
-                        <tr
-                          key={invoice.uuid}
-                          className="hover:bg-sky-50 transition-colors duration-200"
-                        >
-                          <td className="px-6 py-4 text-sm text-gray-700">
-                            {invoice.refNo}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-700">
-                            {invoice.customerName}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-700">
-                            {invoice.mobile}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-700">
-                            {invoice.itemName}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-700">
-                            {invoice.price}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-700">
-                            {invoice.totalAmount}
-                          </td>
-                          <td className="px-6 py-4 w-fit flex">
-                          <div className="flex space-x-2">
-                        <button
-                          onClick={() => handleViewClick(invoice)}
-                          className="text-blue-600 hover:text-blue-800"
-                        >
-                          View
-                        </button>
-                        <button
-                          onClick={() => handleDownload(invoice.uuid, invoice.refNo)}
-                          className="text-green-600 hover:text-green-800"
-                        >
-                          Download
-                        </button>
-                       
-                      </div>
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td
-                          colSpan={20} // Update to match the total number of columns in your table
-                          className="px-4 py-2 text-sm text-center text-gray-500"
-                        >
-                          No invoice found.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
+  const renderCustomerInfo = () => (
+    <div className="bg-white shadow overflow-hidden sm:rounded-lg mb-8">
+      <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
+        <h3 className="text-lg font-medium leading-6 text-gray-900">Customer Information</h3>
+        <p className="mt-1 max-w-2xl text-sm text-gray-500">
+          Details and information about the customer
+        </p>
       </div>
-    </DashboardLayout>
+      <div className="px-4 py-5 sm:p-6">
+        <div className="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="flex items-start">
+            <div className="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+              <FiDollarSign className="h-6 w-6 text-blue-600" />
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-500">Total Spent</p>
+              <p className="text-lg font-semibold text-gray-900">
+                {formatCurrency(4175.53)}
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-start">
+            <div className="flex-shrink-0 h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
+              <FiShoppingBag className="h-6 w-6 text-green-600" />
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-500">Total Orders</p>
+              <p className="text-lg font-semibold text-gray-900">
+                {purchaseOrders.length}
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-start">
+            <div className="flex-shrink-0 h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
+              <FiFileText className="h-6 w-6 text-purple-600" />
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-500">Total Invoices</p>
+              <p className="text-lg font-semibold text-gray-900">
+                {invoices.length}
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-start">
+            <div className="flex-shrink-0 h-10 w-10 rounded-full bg-yellow-100 flex items-center justify-center">
+              <FiCalendar className="h-6 w-6 text-yellow-600" />
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-500">Member Since</p>
+              <p className="text-lg font-semibold text-gray-900">
+                {formatDate(selectedCustomer.createdAt)}
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="mt-8 border-t border-gray-200 pt-6">
+          <h4 className="text-sm font-medium text-gray-500 mb-4">Contact Information</h4>
+          <div className="grid grid-cols-1 gap-y-4 gap-x-4 sm:grid-cols-2">
+            <div className="flex items-start">
+              <div className="flex-shrink-0 h-6 w-6 text-gray-400">
+                <FiPhone className="h-5 w-5" />
+              </div>
+              <div className="ml-3 text-sm">
+                <p className="text-gray-500">Phone</p>
+                <p className="mt-1 font-medium text-gray-900">
+                  {selectedCustomer.mobile || 'N/A'}
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-start">
+              <div className="flex-shrink-0 h-6 w-6 text-gray-400">
+                <FiMapPin className="h-5 w-5" />
+              </div>
+              <div className="ml-3 text-sm">
+                <p className="text-gray-500">Address</p>
+                <p className="mt-1 font-medium text-gray-900">
+                  {selectedCustomer.address || 'N/A'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderPurchaseOrders = () => (
+    <div className="mt-6">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-medium text-gray-900">Purchase Orders</h3>
+        <Link
+          to="/purchase-orders/new"
+          className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+        >
+          <FiPlus className="-ml-1 mr-1 h-4 w-4" />
+          New PO
+        </Link>
+      </div>
+
+      {purchaseOrders.length > 0 ? (
+        <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    PO Number
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Date
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Amount
+                  </th>
+                  <th scope="col" className="relative px-6 py-3">
+                    <span className="sr-only">Actions</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {purchaseOrders.map((po) => (
+                  <tr key={po.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
+                      <Link to={`/purchase-orders/${po.id}`} className="hover:underline">
+                        {po.poNumber || `PO-${po.id?.slice(0, 8)}`}
+                      </Link>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {formatDate(po.createdAt)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                        po.status === 'completed' ? 'bg-green-100 text-green-800' :
+                        po.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {po.status || 'draft'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {formatCurrency(po.totalAmount)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <Link 
+                        to={`/purchase-orders/${po.id}`}
+                        className="text-blue-600 hover:text-blue-900 mr-4"
+                      >
+                        View
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : (
+        <div className="text-center py-12 bg-white shadow sm:rounded-lg">
+          <FiShoppingBag className="mx-auto h-12 w-12 text-gray-400" />
+          <h3 className="mt-2 text-sm font-medium text-gray-900">No purchase orders</h3>
+          <p className="mt-1 text-sm text-gray-500">
+            This customer doesn't have any purchase orders yet.
+          </p>
+          <div className="mt-6">
+            <Link
+              to="/purchase-orders/new"
+              className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              <FiPlus className="-ml-1 mr-2 h-5 w-5" />
+              Create Purchase Order
+            </Link>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  const renderInvoices = () => (
+    <div className="mt-6">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-medium text-gray-900">Invoices</h3>
+        <Link
+          to="/invoices/new"
+          className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+        >
+          <FiPlus className="-ml-1 mr-1 h-4 w-4" />
+          New Invoice
+        </Link>
+      </div>
+
+      {invoices.length > 0 ? (
+        <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Invoice
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Date
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Due Date
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Amount
+                  </th>
+                  <th scope="col" className="relative px-6 py-3">
+                    <span className="sr-only">Actions</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {invoices.map((invoice) => (
+                  <tr key={invoice.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
+                      <Link to={`/invoices/${invoice.id}`} className="hover:underline">
+                        {invoice.invoiceNumber || `INV-${invoice.id?.slice(0, 8)}`}
+                      </Link>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {formatDate(invoice.invoiceDate)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {formatDate(invoice.dueDate)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                        invoice.status === 'paid' ? 'bg-green-100 text-green-800' :
+                        invoice.status === 'overdue' ? 'bg-red-100 text-red-800' :
+                        'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {invoice.status || 'draft'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {formatCurrency(invoice.totalAmount)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <Link 
+                        to={`/invoices/${invoice.id}`}
+                        className="text-blue-600 hover:text-blue-900 mr-4"
+                      >
+                        View
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : (
+        <div className="text-center py-12 bg-white shadow sm:rounded-lg">
+          <FiFileText className="mx-auto h-12 w-12 text-gray-400" />
+          <h3 className="mt-2 text-sm font-medium text-gray-900">No invoices</h3>
+          <p className="mt-1 text-sm text-gray-500">
+            This customer doesn't have any invoices yet.
+          </p>
+          <div className="mt-6">
+            <Link
+              to="/invoices/new"
+              className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              <FiPlus className="-ml-1 mr-2 h-5 w-5" />
+              Create Invoice
+            </Link>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  // Tabs component
+  const renderTabs = () => (
+    <div className="border-b border-gray-200 mb-6">
+      <nav className="-mb-px flex space-x-8">
+        <button
+          onClick={() => setActiveTab('purchase-orders')}
+          className={`${
+            activeTab === 'purchase-orders'
+              ? 'border-blue-500 text-blue-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+          } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+          aria-current={activeTab === 'purchase-orders' ? 'page' : undefined}
+        >
+          Purchase Orders
+          <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+            {purchaseOrders.length}
+          </span>
+        </button>
+        <button
+          onClick={() => setActiveTab('invoices')}
+          className={`${
+            activeTab === 'invoices'
+              ? 'border-blue-500 text-blue-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+          } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+          aria-current={activeTab === 'invoices' ? 'page' : undefined}
+        >
+          Invoices
+          <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+            {invoices.length}
+          </span>
+        </button>
+      </nav>
+    </div>
+  );
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="md:flex md:items-center md:justify-between mb-6">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center">
+            <Link
+              to="/customers"
+              className="mr-4 p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              <FiArrowLeft className="h-5 w-5 text-gray-600" />
+            </Link>
+            <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
+              {selectedCustomer.name}
+            </h2>
+          </div>
+          <div className="mt-1 flex flex-col sm:flex-row sm:flex-wrap sm:space-x-6">
+            <div className="mt-2 flex items-center text-sm text-gray-500">
+              <FiMail className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" />
+              {selectedCustomer.email}
+            </div>
+            <div className="mt-2 flex items-center text-sm text-gray-500">
+              <FiPhone className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" />
+              {selectedCustomer.mobile}
+            </div>
+            {selectedCustomer.gstNumber && (
+              <div className="mt-2 flex items-center text-sm text-gray-500">
+                <FiCreditCard className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" />
+                GST: {selectedCustomer.gstNumber}
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="mt-4 flex space-x-3 md:mt-0 md:ml-4">
+          <Link
+            to={`/customers/edit/${selectedCustomer.id}`}
+            className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            <FiEdit2 className="-ml-1 mr-2 h-5 w-5 text-gray-500" />
+            Edit
+          </Link>
+          <Link
+            to={`/invoices/new?customerId=${selectedCustomer.id}`}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            <FiPlus className="-ml-1 mr-2 h-5 w-5" />
+            New Invoice
+          </Link>
+        </div>
+      </div>
+
+      <>
+        {renderCustomerInfo()}
+        {renderTabs()}
+        {activeTab === 'purchase-orders' ? renderPurchaseOrders() : renderInvoices()}
+      </>
+    </div>
   );
 };
 

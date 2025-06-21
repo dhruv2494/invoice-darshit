@@ -1,13 +1,17 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Outlet, Navigate } from "react-router-dom";
 import Login from "../pages/Login";
 import Dashboard from "../pages/Dashboard";
-import PurchaseOrders from "../pages/PurchaseOrders";
+import PurchaseOrderList from "../components/purchase-orders/PurchaseOrderList";
+import PurchaseOrderForm from "../components/purchase-orders/PurchaseOrderForm";
+import PurchaseOrderDetails from "../pages/PurchaseOrderDetails";
 import Customers from "../pages/Customers";
+import CustomerFormPage from "../pages/CustomerFormPage";
 import Invoices from "../pages/Invoices";
 import ProtectedRoute from "../components/ProtectedRoute";
 import Home from "../pages/home";
 import CustomerDetails from "../pages/CustomerDetails";
-import InvoiceDetails from "../pages/InvoiceDetails";
+import InvoiceDetailsPage from "../pages/InvoiceDetailsPage";
+import DashboardLayout from "../components/DashboardLayout";
 
 const RouteContainer = () => {
   return (
@@ -24,46 +28,84 @@ const RouteContainer = () => {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/purchase-orders"
-          element={
-            <ProtectedRoute>
-              <PurchaseOrders />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/customers"
-          element={
-            <ProtectedRoute>
-              <Customers />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/customer-details"
-          element={
-            <ProtectedRoute>
+        {/* Purchase Orders Routes */}
+        <Route path="/purchase-orders" element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <Outlet />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }>
+          <Route index element={<PurchaseOrderList />} />
+          <Route 
+            path="new" 
+            element={
+              <PurchaseOrderForm 
+                onClose={() => window.history.back()}
+                onSuccess={() => window.location.href = '/purchase-orders'}
+              />
+            } 
+          />
+          <Route 
+            path=":id" 
+            element={
+              <PurchaseOrderDetails />
+            } 
+          />
+          <Route 
+            path=":id/edit" 
+            element={
+              <PurchaseOrderForm 
+                isEdit={true}
+                onClose={() => window.history.back()}
+                onSuccess={() => window.location.href = '/purchase-orders'}
+              />
+            } 
+          />
+        </Route>
+        {/* Customers Routes */}
+        <Route path="/customers" element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <Outlet />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }>
+          <Route index element={<Customers />} />
+          <Route path="new" element={<CustomerFormPage />} />
+          <Route path=":id" element={<CustomerFormPage />} />
+        </Route>
+        
+        <Route path="/customer-details/:id" element={
+          <ProtectedRoute>
+            <DashboardLayout>
               <CustomerDetails />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/invoices"
-          element={
-            <ProtectedRoute>
-              <Invoices />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/invoice-details"
-          element={
-            <ProtectedRoute>
-              <InvoiceDetails />
-            </ProtectedRoute>
-          }
-        />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
+        
+        {/* Redirect old customer form route to new one */}
+        <Route path="/customers/edit/:id" element={
+          <Navigate to="/customers/:id" replace />
+        } />
+        
+        {/* Invoices Routes */}
+        <Route path="/invoices" element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <Outlet />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }>
+          <Route index element={<Invoices />} />
+          <Route path=":id" element={<InvoiceDetailsPage />} />
+          <Route 
+            path=":id/edit" 
+            element={
+              <InvoiceDetailsPage isEdit={true} />
+            } 
+          />
+        </Route>
       </Routes>
     </BrowserRouter>
   );

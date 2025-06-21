@@ -5,6 +5,7 @@ import { showToast } from "../modules/utils";
 // ✅ Initial State
 const initialState = {
   customers: [],
+  selectedCustomer: null,
   loading: false,
   error: null,
 };
@@ -20,6 +21,19 @@ export const getCustomers = createAsyncThunk(
       return res?.data?.list;
     } catch (error) {
       return rejectWithValue(error.response?.data || "Failed to fetch customers");
+    }
+  }
+);
+
+// Get customer by ID
+export const getCustomerById = createAsyncThunk(
+  "customer/getCustomerById",
+  async (id, { rejectWithValue }) => {
+    try {
+      const res = await API.get(`/customercrud/get/${id}`);
+      return res?.data?.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || "Failed to fetch customer");
     }
   }
 );
@@ -57,7 +71,7 @@ export const addEditCustomer = createAsyncThunk(
   }
 );
 
-// ✅ Slice
+// Slice
 const customerSlice = createSlice({
   name: "customer",
   initialState,
@@ -70,10 +84,24 @@ const customerSlice = createSlice({
         state.error = null;
       })
       .addCase(getCustomers.fulfilled, (state, action) => {
-        state.customers = action.payload;
         state.loading = false;
+        state.customers = action.payload || [];
       })
       .addCase(getCustomers.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      // Get customer by ID
+      .addCase(getCustomerById.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getCustomerById.fulfilled, (state, action) => {
+        state.loading = false;
+        state.selectedCustomer = action.payload || null;
+      })
+      .addCase(getCustomerById.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
@@ -98,6 +126,7 @@ const customerSlice = createSlice({
       })
       .addCase(addEditCustomer.fulfilled, (state) => {
         state.loading = false;
+        state.selectedCustomer = null; // Reset selected customer after successful save
       })
       .addCase(addEditCustomer.rejected, (state, action) => {
         state.loading = false;

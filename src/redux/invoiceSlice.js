@@ -30,6 +30,19 @@ export const getInvoices = createAsyncThunk(
   }
 );
 
+export const getInvoicesByCustomer = createAsyncThunk(
+  "invoice/getByCustomer",
+  async (customerId, { rejectWithValue }) => {
+    try {
+      const response = await API.get(`/invoice/customer/${customerId}`);
+      return response?.data?.list || [];
+    } catch (error) {
+      console.error(`Error fetching invoices for customer ${customerId}:`, error);
+      return rejectWithValue(error.response?.data || "Failed to fetch customer's invoices");
+    }
+  }
+);
+
 // Async thunk to add or edit invoices
 export const addEditInvoices = createAsyncThunk(
   "invoice/addEdit",
@@ -65,67 +78,103 @@ export const deleteInvoices = createAsyncThunk(
   }
 );
 
+// Initial state
+const initialState = {
+  completedPurchaseOrders: [],
+  invoices: [],
+  customerInvoices: [],
+  loading: false,
+  loadingList: false,
+  error: null,
+  selectedInvoice: null,
+  status: ["draft", "pending", "paid", "overdue", "cancelled"],
+  filters: {
+    status: "",
+    dateRange: {
+      from: "",
+      to: ""
+    },
+    search: ""
+  },
+  lastFetched: null
+};
+
 const invoiceSlice = createSlice({
   name: "invoice",
-  initialState: {
-    invoices: [],
-    completedPurchaseOrder: [],
-    loading: false,
-    error: null,
-  },
+  initialState,
   reducers: {}, // No additional reducers needed here
   extraReducers: (builder) => {
-    builder
-      // Handle fetching completed purchase orders
-      .addCase(getCompletedPurchaseOrder.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(getCompletedPurchaseOrder.fulfilled, (state, action) => {
-        state.loading = false;
-        state.completedPurchaseOrder = action.payload;
-      })
-      .addCase(getCompletedPurchaseOrder.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload || action.error.message; // Handle error properly
-      })
+    // Get completed purchase orders
+    builder.addCase(getCompletedPurchaseOrder.pending, (state) => {
+      state.loading = true;
+      state.error = null;
+    });
+    builder.addCase(getCompletedPurchaseOrder.fulfilled, (state, action) => {
+      state.loading = false;
+      state.completedPurchaseOrders = action.payload;
+    });
+    builder.addCase(getCompletedPurchaseOrder.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.payload;
+    });
 
-      // Handle fetching invoices
-      .addCase(getInvoices.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(getInvoices.fulfilled, (state, action) => {
-        state.loading = false;
-        state.invoices = action.payload;
-      })
-      .addCase(getInvoices.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload || action.error.message;
-      })
+    // Get all invoices
+    builder.addCase(getInvoices.pending, (state) => {
+      state.loadingList = true;
+      state.error = null;
+    });
+    builder.addCase(getInvoices.fulfilled, (state, action) => {
+      state.loadingList = false;
+      state.invoices = action.payload;
+      state.lastFetched = new Date().toISOString();
+    });
+    builder.addCase(getInvoices.rejected, (state, action) => {
+      state.loadingList = false;
+      state.error = action.payload;
+    });
 
-      // Handle adding or editing an invoice
-      .addCase(addEditInvoices.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(addEditInvoices.fulfilled, (state, action) => {
-        state.loading = false;
-        // Ensure the updated invoice is in the list (or push it if new)
-        const index = state.invoices.findIndex(
-          (invoice) => invoice.uuid === action.payload.uuid
-        );
-        if (index !== -1) {
-          state.invoices[index] = action.payload; // Replace existing
-        } else {
-          state.invoices.push(action.payload); // Add new
-        }
-      })
-      .addCase(addEditInvoices.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload || action.error.message;
-      });
+    // Get invoices by customer
+    builder.addCase(getInvoicesByCustomer.pending, (state) => {
+      state.loading = true;
+      state.error = null;
+    });
+    builder.addCase(getInvoicesByCustomer.fulfilled, (state, action) => {
+      state.loading = false;
+      state.customerInvoices = action.payload;
+    });
+    builder.addCase(getInvoicesByCustomer.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.payload;
+    });
+
+    // Add/Edit invoice
+    builder.addCase(addEditInvoices.pending, (state) => {
+      state.loading = true;
+      state.error = null;
+    });
+    builder.addCase(addEditInvoices.fulfilled, (state, action) => {
+      state.loading = false;
+      // Update the invoice in the list if it exists, otherwise add it
+      const index = state.invoices.findIndex(
+        (invoice) => invoice.uuid === action.payload.uuid
+      );
+      if (index !== -1) {
+        state.invoices[index] = action.payload;
+      } else {
+        state.invoices.push(action.payload);
+      }
+    });
+    builder.addCase(addEditInvoices.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.payload;
+    });
   },
 });
+
+// Selectors
+export const selectAllInvoices = (state) => state.invoice.invoices || [];
+export const selectCustomerInvoices = (state) => state.invoice.customerInvoices;
+export const selectLoading = (state) => state.invoice.loading;
+export const selectError = (state) => state.invoice.error;
 
 export default invoiceSlice.reducer;
