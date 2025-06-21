@@ -35,11 +35,6 @@ const Sidebar = ({ isOpen, toggleSidebar, isCollapsed, toggleCollapse }) => {
       icon: <FiUsers className="w-5 h-5" />,
     },
     { 
-      name: "Customer Details", 
-      path: "/customer-details", 
-      icon: <FiUser className="w-5 h-5" />,
-    },
-    { 
       name: "Invoices", 
       path: "/invoices", 
       icon: <FiFileText className="w-5 h-5" />,
@@ -123,36 +118,18 @@ const Sidebar = ({ isOpen, toggleSidebar, isCollapsed, toggleCollapse }) => {
           </div>
         </nav>
 
-        {/* Bottom Section */}
+        {/* Bottom Section - Removed user profile as it's now in Navbar */}
         <div className="border-t border-gray-200 p-4">
-          <div className="flex items-center justify-between">
-            {!isCollapsed && (
-              <div className="flex items-center">
-                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                  <span className="text-blue-600 font-medium text-sm">AD</span>
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-800">Admin</p>
-                  <p className="text-xs text-gray-500">admin@example.com</p>
-                </div>
+          {isCollapsed ? (
+            <div className="flex justify-center">
+              <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                <FiMenu className="w-5 h-5 text-gray-500" />
               </div>
-            )}
-            {isCollapsed && (
-              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mx-auto">
-                <span className="text-blue-600 font-medium text-sm">AD</span>
-              </div>
-            )}
-          </div>
-          
-          {!isCollapsed && (
-            <div className="mt-4 flex space-x-2">
-              <button className="flex-1 flex items-center justify-center p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors">
-                <FiSettings className="w-5 h-5" />
-              </button>
-              <button className="flex-1 flex items-center justify-center p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors">
-                <FiLogOut className="w-5 h-5" />
-              </button>
             </div>
+          ) : (
+            <p className="text-xs text-center text-gray-500">
+              © {new Date().getFullYear()} InvoicePro
+            </p>
           )}
         </div>
       </aside>

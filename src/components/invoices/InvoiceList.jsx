@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import { FiEdit2, FiTrash2, FiEye, FiFilter, FiX, FiPlus, FiRefreshCw, FiDownload } from 'react-icons/fi';
 import { format } from 'date-fns';
+import { getInvoices } from '../../redux/invoiceSlice';
 import ConfirmModal from '../common/ConfirmModal';
+import Pagination from '../common/Pagination';
 
 // Mock data for UI demonstration
 const mockInvoices = [
@@ -66,10 +69,32 @@ const InvoiceList = () => {
     }
   });
   
-  // For UI demo, use mock data
-  const [invoices, setInvoices] = useState(mockInvoices);
-  const loading = false; // No loading state needed for mock data
-  const error = null; // No error state needed for mock data
+  // Use Redux for state management
+  const dispatch = useDispatch();
+  const { invoices, loading, error, pagination } = useSelector((state) => ({
+    invoices: state.invoice.invoices,
+    loading: state.invoice.loading,
+    error: state.invoice.error,
+    pagination: state.invoice.pagination || {
+      currentPage: 1,
+      pageSize: 10,
+      totalItems: 0,
+      totalPages: 1
+    }
+  }));
+  
+  // Fetch invoices when component mounts or when pagination/filters change
+  useEffect(() => {
+    fetchInvoices();
+  }, [pagination.currentPage, pagination.pageSize, localFilters]);
+  
+  const fetchInvoices = () => {
+    dispatch(getInvoices({
+      page: pagination.currentPage,
+      pageSize: pagination.pageSize,
+      filters: localFilters
+    }));
+  };
 
   // Handle filter changes
   const handleFilterChange = (e) => {
@@ -82,21 +107,31 @@ const InvoiceList = () => {
 
   // Apply filters
   const applyFilters = () => {
-    // In a real app, we would dispatch the filters to Redux
-    // For UI demo, we'll just close the filter panel
+    // Reset to first page when applying new filters
+    dispatch(getInvoices({
+      page: 1,
+      pageSize: pagination.pageSize,
+      filters: localFilters
+    }));
     setShowFilters(false);
   };
 
   // Reset filters
   const resetFilters = () => {
-    setLocalFilters({
+    const newFilters = {
       status: '',
       search: '',
       dateRange: {
         from: '',
         to: ''
       }
-    });
+    };
+    setLocalFilters(newFilters);
+    dispatch(getInvoices({
+      page: 1,
+      pageSize: pagination.pageSize,
+      filters: newFilters
+    }));
   };
 
   // Handle date range change
@@ -154,42 +189,39 @@ const InvoiceList = () => {
     }, 1000);
   };
 
-  // Filter invoices based on current filters
-  const filteredInvoices = invoices.filter(invoice => {
-    // Status filter
-    if (localFilters.status && invoice.status !== localFilters.status) return false;
-    
-    // Date range filter
-    if (localFilters.dateRange.from || localFilters.dateRange.to) {
-      const invoiceDate = new Date(invoice.invoiceDate);
-      
-      if (localFilters.dateRange.from) {
-        const fromDate = new Date(localFilters.dateRange.from);
-        fromDate.setHours(0, 0, 0, 0);
-        if (invoiceDate < fromDate) return false;
-      }
-      
-      if (localFilters.dateRange.to) {
-        const toDate = new Date(localFilters.dateRange.to);
-        toDate.setHours(23, 59, 59, 999);
-        if (invoiceDate > toDate) return false;
-      }
-    }
-    
-    // Search filter
-    if (localFilters.search) {
-      const searchTerm = localFilters.search.toLowerCase();
-      return (
-        (invoice.invoiceNumber && invoice.invoiceNumber.toLowerCase().includes(searchTerm)) ||
-        (invoice.customerName && invoice.customerName.toLowerCase().includes(searchTerm)) ||
-        (invoice.status && invoice.status.toLowerCase().includes(searchTerm)) ||
-        (invoice.totalAmount && invoice.totalAmount.toString().includes(localFilters.search))
-      );
-    }
-    
-    return true;
-  });
+  // Sample data for demonstration
+  const sampleInvoices = Array.from({ length: 25 }, (_, i) => ({
+    uuid: `inv-${i + 1}`,
+    invoiceNumber: `INV-2023-${String(i + 1).padStart(3, '0')}`,
+    customerName: `Customer ${i + 1}`,
+    invoiceDate: new Date(2023, 5, i + 1).toISOString().split('T')[0],
+    dueDate: new Date(2023, 6, i + 1).toISOString().split('T')[0],
+    totalAmount: 1000 + (i * 100),
+    status: ['draft', 'sent', 'paid', 'overdue', 'cancelled'][i % 5]
+  }));
 
+  // Client-side pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
+  
+  // Calculate pagination
+  const totalItems = sampleInvoices.length;
+  const totalPages = Math.ceil(totalItems / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const paginatedInvoices = sampleInvoices.slice(startIndex, startIndex + pageSize);
+  
+  // Handle page change
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    window.scrollTo(0, 0);
+  };
+  
+  // Handle page size change
+  const handlePageSizeChange = (newSize) => {
+    setPageSize(Number(newSize));
+    setCurrentPage(1); // Reset to first page when changing page size
+  };
+  
   // Get status badge class
   const getStatusBadgeClass = (status) => {
     switch (status?.toLowerCase()) {
@@ -228,17 +260,30 @@ const InvoiceList = () => {
 
   return (
     <div className="px-4 sm:px-6 lg:px-8">
-      <div className="sm:flex sm:items-center">
+      <div className="sm:flex sm:items-center sm:justify-between">
         <div className="sm:flex-auto">
-          <h1 className="text-xl font-semibold text-gray-900">Invoices</h1>
-          <p className="mt-2 text-sm text-gray-700">
-            A list of all invoices including their details and status.
+          <h1 className="text-2xl font-bold text-gray-900">Invoices</h1>
+          <p className="mt-1 text-sm text-gray-600">
+            View and manage your invoices
           </p>
         </div>
-        <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
+        <div className="mt-4 sm:mt-0 sm:flex sm:items-center">
+          <div className="mr-4">
+            <select
+              value={pageSize}
+              onChange={(e) => handlePageSizeChange(e.target.value)}
+              className="rounded-md border-gray-300 py-2 pl-3 pr-8 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            >
+              {[5, 10, 20, 50].map((size) => (
+                <option key={size} value={size}>
+                  Show {size} per page
+                </option>
+              ))}
+            </select>
+          </div>
           <Link
             to="/invoices/new"
-            className="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:w-auto"
+            className="inline-flex items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           >
             <FiPlus className="-ml-1 mr-2 h-5 w-5" />
             New Invoice
@@ -364,152 +409,218 @@ const InvoiceList = () => {
       <div className="mt-8 flex flex-col">
         <div className="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
           <div className="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
-            <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
-              {loading === 'pending' && !invoices.length ? (
-                <div className="flex justify-center items-center p-12">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-                </div>
-              ) : error ? (
-                <div className="bg-red-50 border-l-4 border-red-400 p-4">
-                  <div className="flex">
-                    <div className="flex-shrink-0">
-                      <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-sm text-red-700">
-                        {error}
-                      </p>
+            <div className="overflow-hidden shadow md:rounded-lg">
+              <div className="overflow-hidden shadow md:rounded-lg">
+                {loading === 'pending' && !invoices.length ? (
+                  <div className="flex justify-center items-center p-12">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                  </div>
+                ) : error ? (
+                  <div className="bg-red-50 border-l-4 border-red-400 p-4">
+                    <div className="flex">
+                      <div className="flex-shrink-0">
+                        <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <div className="ml-3">
+                        <p className="text-sm text-red-700">
+                          {error}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ) : filteredInvoices.length === 0 ? (
-                <div className="text-center py-12">
-                  <svg
-                    className="mx-auto h-12 w-12 text-gray-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    aria-hidden="true"
-                  >
-                    <path
-                      vectorEffect="non-scaling-stroke"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"
-                    />
-                  </svg>
-                  <h3 className="mt-2 text-sm font-medium text-gray-900">No invoices</h3>
-                  <p className="mt-1 text-sm text-gray-500">
-                    Get started by creating a new invoice.
-                  </p>
-                  <div className="mt-6">
-                    <Link
-                      to="/invoices/new"
-                      className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                ) : paginatedInvoices.length === 0 ? (
+                  <div className="text-center py-12">
+                    <svg
+                      className="mx-auto h-12 w-12 text-gray-400"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      aria-hidden="true"
                     >
-                      <FiPlus className="-ml-1 mr-2 h-5 w-5" />
-                      New Invoice
-                    </Link>
+                      <path
+                        vectorEffect="non-scaling-stroke"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"
+                      />
+                    </svg>
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">No invoices</h3>
+                    <p className="mt-1 text-sm text-gray-500">
+                      Get started by creating a new invoice.
+                    </p>
+                    <div className="mt-6">
+                      <Link
+                        to="/invoices/new"
+                        className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                      >
+                        <FiPlus className="-ml-1 mr-2 h-5 w-5" />
+                        New Invoice
+                      </Link>
+                    </div>
                   </div>
-                </div>
-              ) : (
-                <table className="min-w-full divide-y divide-gray-300">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">
-                        Invoice #
-                      </th>
-                      <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                        Customer
-                      </th>
-                      <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                        Date
-                      </th>
-                      <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                        Due Date
-                      </th>
-                      <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                        Amount
-                      </th>
-                      <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                        Status
-                      </th>
-                      <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-6">
-                        <span className="sr-only">Actions</span>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200 bg-white">
-                    {filteredInvoices.map((invoice) => (
-                      <tr key={invoice.uuid} className="hover:bg-gray-50">
-                        <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-blue-600 sm:pl-6">
-                          <Link to={`/invoices/${invoice.uuid}`} className="hover:underline">
-                            {invoice.invoiceNumber}
-                          </Link>
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                          {invoice.customerName}
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                          {invoice.invoiceDate ? format(new Date(invoice.invoiceDate), 'MMM dd, yyyy') : 'N/A'}
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                          {invoice.dueDate ? format(new Date(invoice.dueDate), 'MMM dd, yyyy') : 'N/A'}
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-900 font-medium">
-                          {formatCurrency(invoice.totalAmount)}
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-4">
-                          <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusBadgeClass(invoice.status)}`}>
-                            {invoice.status ? invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1) : 'N/A'}
-                          </span>
-                        </td>
-                        <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
-                          <div className="flex items-center justify-end space-x-2">
+                ) : (
+                  <>
+                    <table className="min-w-full divide-y divide-gray-300">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">
+                            Invoice #
+                          </th>
+                          <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                            Customer
+                          </th>
+                          <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                            Date
+                          </th>
+                          <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                            Due Date
+                          </th>
+                          <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                            Amount
+                          </th>
+                          <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                            Status
+                          </th>
+                          <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-6">
+                            <span className="sr-only">Actions</span>
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200 bg-white">
+                        {paginatedInvoices.map((invoice) => (
+                          <tr key={invoice.uuid} className="hover:bg-gray-50">
+                            <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-blue-600 sm:pl-6">
+                              <Link to={`/invoices/${invoice.uuid}`} className="hover:underline">
+                                {invoice.invoiceNumber}
+                              </Link>
+                            </td>
+                            <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                              {invoice.customerName}
+                            </td>
+                            <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                              {invoice.invoiceDate ? format(new Date(invoice.invoiceDate), 'MMM dd, yyyy') : 'N/A'}
+                            </td>
+                            <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                              {invoice.dueDate ? format(new Date(invoice.dueDate), 'MMM dd, yyyy') : 'N/A'}
+                            </td>
+                            <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-900 font-medium">
+                              {formatCurrency(invoice.totalAmount)}
+                            </td>
+                            <td className="whitespace-nowrap px-3 py-4">
+                              <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusBadgeClass(invoice.status)}`}>
+                                {invoice.status ? invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1) : 'N/A'}
+                              </span>
+                            </td>
+                            <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+                              <div className="flex items-center justify-end space-x-2">
+                                <button
+                                  onClick={() => handleDownload(invoice.uuid, invoice.invoiceNumber)}
+                                  className="text-gray-600 hover:text-gray-900 mr-3"
+                                  title="Download">
+                                  <FiDownload className="h-4 w-4" />
+                                </button>
+                                <Link
+                                  to={`/invoices/${invoice.uuid}`}
+                                  className="text-blue-600 hover:text-blue-900"
+                                  title="View"
+                                >
+                                  <FiEye className="h-4 w-4" />
+                                </Link>
+                                <Link
+                                  to={`/invoices/${invoice.uuid}/edit`}
+                                  className="text-indigo-600 hover:text-indigo-900"
+                                  title="Edit"
+                                >
+                                  <FiEdit2 className="h-4 w-4" />
+                                </Link>
+                                <button
+                                  onClick={() => handleDeleteClick(invoice)}
+                                  className="text-red-600 hover:text-red-900"
+                                  title="Delete">
+                                  <FiTrash2 className="h-4 w-4" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    <div className="px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+                      <div className="flex-1 flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-gray-700">
+                            Showing <span className="font-medium">{startIndex + 1}</span> to{' '}
+                            <span className="font-medium">
+                              {Math.min(startIndex + pageSize, totalItems)}
+                            </span>{' '}
+                            of <span className="font-medium">{totalItems}</span> results
+                          </p>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
                             <button
-                              onClick={() => handleDownload(invoice.uuid, invoice.invoiceNumber)}
-                              className="text-gray-400 hover:text-gray-500"
-                              title="Download"
+                              onClick={() => handlePageChange(currentPage - 1)}
+                              disabled={currentPage === 1}
+                              className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                              <FiDownload className="h-4 w-4" />
+                              <span className="sr-only">Previous</span>
+                              <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
                             </button>
-                            <Link
-                              to={`/invoices/${invoice.uuid}`}
-                              className="text-blue-600 hover:text-blue-900"
-                              title="View"
-                            >
-                              <FiEye className="h-4 w-4" />
-                            </Link>
-                            <Link
-                              to={`/invoices/${invoice.uuid}/edit`}
-                              className="text-indigo-600 hover:text-indigo-900"
-                              title="Edit"
-                            >
-                              <FiEdit2 className="h-4 w-4" />
-                            </Link>
+                            
+                            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                              let pageNum;
+                              if (totalPages <= 5) {
+                                pageNum = i + 1;
+                              } else if (currentPage <= 3) {
+                                pageNum = i + 1;
+                              } else if (currentPage >= totalPages - 2) {
+                                pageNum = totalPages - 4 + i;
+                              } else {
+                                pageNum = currentPage - 2 + i;
+                              }
+                              
+                              return (
+                                <button
+                                  key={pageNum}
+                                  onClick={() => handlePageChange(pageNum)}
+                                  className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                                    currentPage === pageNum
+                                      ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
+                                      : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                                  }`}
+                                >
+                                  {pageNum}
+                                </button>
+                              );
+                            })}
+                            
                             <button
-                              onClick={() => handleDeleteClick(invoice)}
-                              className="text-red-600 hover:text-red-900"
-                              title="Delete"
+                              onClick={() => handlePageChange(currentPage + 1)}
+                              disabled={currentPage === totalPages}
+                              className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                              <FiTrash2 className="h-4 w-4" />
+                              <span className="sr-only">Next</span>
+                              <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                              </svg>
                             </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
+                          </nav>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>
       </div>
       
-      {/* Delete Confirmation Modal */}
       {showDeleteModal && (
         <div className="fixed z-10 inset-0 overflow-y-auto">
           <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">

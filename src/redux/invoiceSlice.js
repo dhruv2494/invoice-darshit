@@ -17,13 +17,24 @@ export const getCompletedPurchaseOrder = createAsyncThunk(
   }
 );
 
-// Async thunk to fetch all invoices
+// Async thunk to fetch paginated invoices
 export const getInvoices = createAsyncThunk(
   "invoice/getAll",
-  async (_, { rejectWithValue }) => {
+  async ({ page = 1, pageSize = 10, filters = {} }, { rejectWithValue }) => {
     try {
-      const response = await API.get("/invoice/Get");
-      return response?.data?.list || []; // Default empty array if no data
+      const response = await API.get("/invoice/Get", {
+        params: {
+          page,
+          pageSize,
+          ...filters
+        }
+      });
+      return {
+        data: response?.data?.list || [],
+        total: response?.data?.total || 0,
+        page,
+        pageSize
+      };
     } catch (error) {
       return rejectWithValue(error.message);
     }
@@ -88,6 +99,12 @@ const initialState = {
   error: null,
   selectedInvoice: null,
   status: ["draft", "pending", "paid", "overdue", "cancelled"],
+  pagination: {
+    currentPage: 1,
+    pageSize: 10,
+    totalItems: 0,
+    totalPages: 1
+  },
   filters: {
     status: "",
     dateRange: {
@@ -125,7 +142,14 @@ const invoiceSlice = createSlice({
     });
     builder.addCase(getInvoices.fulfilled, (state, action) => {
       state.loadingList = false;
-      state.invoices = action.payload;
+      state.invoices = action.payload.data;
+      state.pagination = {
+        currentPage: action.payload.page,
+        pageSize: action.payload.pageSize,
+        totalItems: action.payload.total,
+        totalPages: Math.ceil(action.payload.total / action.payload.pageSize)
+      };
+      state.error = null;
       state.lastFetched = new Date().toISOString();
     });
     builder.addCase(getInvoices.rejected, (state, action) => {

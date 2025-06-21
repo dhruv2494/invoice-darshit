@@ -1,6 +1,7 @@
 // DashboardLayout.jsx
 import Sidebar from "./Sidebar";
 import Navbar from "./Navbar";
+import Breadcrumb from "./Breadcrumb";
 import { useState } from "react";
 
 const DashboardLayout = ({ children }) => {
@@ -18,13 +19,17 @@ const DashboardLayout = ({ children }) => {
       />
 
       {/* Main content */}
-      <div className="flex flex-col flex-1 min-w-0">
+      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
         <Navbar toggleSidebar={() => setSidebarOpen(!isSidebarOpen)} />
-        <main
-          className="p-4 overflow-auto"
-          style={{ height: "90dvh" }}
-        >
-          {children}
+        
+        {/* Breadcrumb */}
+        <Breadcrumb />
+        
+        {/* Page content */}
+        <main className="flex-1 overflow-auto p-6">
+          <div className="max-w-7xl mx-auto">
+            {children}
+          </div>
         </main>
       </div>
     </div>

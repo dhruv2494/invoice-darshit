@@ -12,6 +12,8 @@ import Home from "../pages/home";
 import CustomerDetails from "../pages/CustomerDetails";
 import InvoiceDetailsPage from "../pages/InvoiceDetailsPage";
 import DashboardLayout from "../components/DashboardLayout";
+import Profile from "../pages/Profile";
+import Settings from "../pages/Settings";
 
 const RouteContainer = () => {
   return (
@@ -106,6 +108,24 @@ const RouteContainer = () => {
             } 
           />
         </Route>
+
+        {/* Profile Route */}
+        <Route path="/profile" element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <Profile />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
+
+        {/* Settings Route */}
+        <Route path="/settings" element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <Settings />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
       </Routes>
     </BrowserRouter>
   );
