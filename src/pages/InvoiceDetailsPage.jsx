@@ -3,6 +3,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useParams, useNavigate } from 'react-router-dom';
 import { fetchInvoiceById, clearInvoice, deleteInvoice } from '../redux/invoiceSlice';
 import { FiArrowLeft, FiDelete, FiDownload, FiEdit2 } from 'react-icons/fi';
+import API from '../services/api';
+import { showToast } from '../modules/utils';
 
 const InvoiceDetailsPage = () => {
   const { uuid } = useParams();
@@ -24,9 +26,27 @@ console.log(invoice);
     navigate('/invoices');
   };
 
-  const handleDownload = (id) => {
-    // dispatch(downloadInvoice(id));
-    navigate('/invoices');
+  const handleDownload = async (uuid, refNo) => {
+    try {
+      const response = await API.get(`/api/invoices/${uuid}/download`, {
+        responseType: "blob", // CRUCIAL: tells Axios to handle binary response
+      });
+
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `Invoice_${refNo}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      showToast("Invoice downloaded successfully!", 1);
+    } catch (error) {
+      console.error("Error downloading invoice:", error);
+      showToast("Failed to download invoice.", 2);
+    }
   };
 
   return (
@@ -38,7 +58,7 @@ console.log(invoice);
         <div>
         <button onClick={() => navigate(`/invoices/${invoice.id}/edit`)} className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50"><FiEdit2 className="mr-2" /> Edit</button>
         <button onClick={() => handleDelete(invoice.id)} className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50"><FiDelete className="mr-2" /> Delete</button>
-        <button onClick={() => handleDownload(invoice.id)} className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50"><FiDownload className="mr-2" /> Download</button>
+        <button onClick={() => handleDownload(invoice.id, invoice.invoice_number)} className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50"><FiDownload className="mr-2" /> Download</button>
         </div>
       </div>
       <div className="bg-white shadow rounded-xl border border-gray-200 p-8">
