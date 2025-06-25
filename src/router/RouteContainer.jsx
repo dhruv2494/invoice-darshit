@@ -7,6 +7,7 @@ import PurchaseOrderDetails from "../pages/PurchaseOrderDetails";
 import Customers from "../pages/Customers";
 import CustomerFormPage from "../pages/CustomerFormPage";
 import Invoices from "../pages/Invoices";
+import InvoiceNewPage from "../pages/InvoiceNewPage";
 import ProtectedRoute from "../components/ProtectedRoute";
 import Home from "../pages/home";
 import CustomerDetails from "../pages/CustomerDetails";
@@ -14,6 +15,7 @@ import InvoiceDetailsPage from "../pages/InvoiceDetailsPage";
 import DashboardLayout from "../components/DashboardLayout";
 import Profile from "../pages/Profile";
 import Settings from "../pages/Settings";
+import InvoiceEditPage from "../pages/InvoiceEditPage";
 
 const RouteContainer = () => {
   return (
@@ -49,13 +51,13 @@ const RouteContainer = () => {
             } 
           />
           <Route 
-            path=":id" 
+            path=":uuid" 
             element={
               <PurchaseOrderDetails />
             } 
           />
           <Route 
-            path=":id/edit" 
+            path=":uuid/edit" 
             element={
               <PurchaseOrderForm 
                 isEdit={true}
@@ -78,7 +80,7 @@ const RouteContainer = () => {
           <Route path=":id" element={<CustomerFormPage />} />
         </Route>
         
-        <Route path="/customer-details/:id" element={
+        <Route path="/customer-details/:uuid" element={
           <ProtectedRoute>
             <DashboardLayout>
               <CustomerDetails />
@@ -100,13 +102,9 @@ const RouteContainer = () => {
           </ProtectedRoute>
         }>
           <Route index element={<Invoices />} />
-          <Route path=":id" element={<InvoiceDetailsPage />} />
-          <Route 
-            path=":id/edit" 
-            element={
-              <InvoiceDetailsPage isEdit={true} />
-            } 
-          />
+          <Route path="new" element={<InvoiceNewPage />} />
+          <Route path=":uuid" element={<InvoiceDetailsPage />} />
+          <Route path=":uuid/edit" element={<InvoiceNewPage isEdit={true} />} />
         </Route>
 
         {/* Profile Route */}

@@ -1,28 +1,34 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import { 
-  FiEdit2, 
-  FiPlus, 
-  FiArrowLeft, 
-  FiFileText, 
-  FiShoppingBag,
-  FiPhone,
-  FiMail,
+import { useEffect, useState } from "react";
+import {
+  FiArrowLeft,
+  FiCalendar,
   FiCreditCard,
   FiDollarSign,
-  FiCalendar,
+  FiEdit2,
+  FiFileText,
+  FiMail,
   FiMapPin,
-  FiCalendar as FiCalendarIcon,
-  FiShoppingBag as FiShoppingBagIcon,
-  FiDollarSign as FiDollarSignIcon,
-  FiFileText as FiFileTextIcon
+  FiPhone,
+  FiPlus,
+  FiShoppingBag
 } from "react-icons/fi";
+import { useDispatch, useSelector } from "react-redux";
+import { Link, useParams } from "react-router-dom";
+import { getCustomerById } from "../redux/customerSlice";
 
 const CustomerDetails = () => {
   const [activeTab, setActiveTab] = useState('purchase-orders');
-  
+  const {uuid } = useParams();
+  const dispatch = useDispatch();
+const customer = useSelector((state) => state.customer.selectedCustomer);
+console.log(customer,"hhjgvhvg");
+  useEffect(() => {
+    if(uuid){
+      dispatch(getCustomerById(uuid));
+    }
+  }, [uuid]);
     // Mock data
-  const customerData = {
+  const customerData =customer ||{
     id: '1',
     name: 'John Doe',
     email: 'john.doe@example.com',
@@ -221,7 +227,7 @@ const CustomerDetails = () => {
                     PO Number
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date
+                    Order Date
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
@@ -239,11 +245,11 @@ const CustomerDetails = () => {
                   <tr key={po.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
                       <Link to={`/purchase-orders/${po.id}`} className="hover:underline">
-                        {po.poNumber || `PO-${po.id?.slice(0, 8)}`}
+                        {po.po_number || `PO-${po.id?.slice(0, 8)}`}
                       </Link>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatDate(po.createdAt)}
+                      {formatDate(po.orderDate)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
@@ -255,7 +261,7 @@ const CustomerDetails = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatCurrency(po.totalAmount)}
+                      {formatCurrency(po.total)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <Link 
@@ -336,14 +342,14 @@ const CustomerDetails = () => {
                   <tr key={invoice.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
                       <Link to={`/invoices/${invoice.id}`} className="hover:underline">
-                        {invoice.invoiceNumber || `INV-${invoice.id?.slice(0, 8)}`}
+                        {invoice.invoice_number || `INV-${invoice.id?.slice(0, 8)}`}
                       </Link>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatDate(invoice.invoiceDate)}
+                      {formatDate(invoice.created_at)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatDate(invoice.dueDate)}
+                      {formatDate(invoice.date)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
@@ -355,7 +361,7 @@ const CustomerDetails = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatCurrency(invoice.totalAmount)}
+                      {formatCurrency(invoice.total_amount)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <Link 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { 
@@ -12,7 +12,7 @@ import {
   selectFilters,
   selectLastFetched
 } from '../../redux/purchaseOrderSlice';
-import { FiEdit2, FiTrash2, FiEye, FiFilter, FiX, FiPlus, FiRefreshCw } from 'react-icons/fi';
+import { FiEdit2, FiTrash2, FiEye, FiFilter, FiX, FiPlus, FiRefreshCw, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { format } from 'date-fns';
 import { showToast } from '../../modules/utils';
 import ConfirmModal from '../common/ConfirmModal';
@@ -37,31 +37,25 @@ const PurchaseOrderList = () => {
       to: filters.dateRange?.to || ''
     }
   });
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
-  // Memoized fetch function to prevent unnecessary re-renders
-  const fetchPurchaseOrders = useCallback(async () => {
-    // Don't refetch if we already have data and it's been less than 30 seconds
+  // Load purchase orders on component mount, with caching to prevent re-fetching on quick navigation
+  useEffect(() => {
     const now = new Date();
     const lastFetch = lastFetched ? new Date(lastFetched) : null;
-    const secondsSinceLastFetch = lastFetch ? (now - lastFetch) / 1000 : 60;
-    
-    if (purchaseOrders.length > 0 && secondsSinceLastFetch < 30) {
-      console.log('Skipping refetch - data is fresh');
-      return;
-    }
+    const secondsSinceLastFetch = lastFetch ? (now - lastFetch) / 1000 : Infinity;
 
-    try {
-      await dispatch(getPurchaseOrders()).unwrap();
-    } catch (error) {
-      console.error('Failed to fetch purchase orders:', error);
-      showToast(error.message || 'Failed to load purchase orders', 'error');
+    // Only fetch if data is older than 30 seconds or not present
+    if (secondsSinceLastFetch > 30) {
+      dispatch(getPurchaseOrders()).unwrap().catch(error => {
+        console.error('Failed to fetch purchase orders:', error);
+        showToast(error.message || 'Failed to load purchase orders', 'error');
+      });
     }
-  }, [dispatch, lastFetched, purchaseOrders.length]);
-
-  // Load purchase orders on component mount
-  useEffect(() => {
-    fetchPurchaseOrders();
-  }, [fetchPurchaseOrders]);
+  }, [dispatch]); // This stable dependency array prevents infinite loops.
 
   // Initialize local filters from Redux store on mount
   useEffect(() => {
@@ -129,6 +123,14 @@ const PurchaseOrderList = () => {
     setOrderToDelete(null);
   };
 
+  // Manually refresh data
+  const handleRefresh = () => {
+    dispatch(getPurchaseOrders()).unwrap().catch(error => {
+      console.error('Failed to manually refresh purchase orders:', error);
+      showToast(error.message || 'Failed to refresh purchase orders', 'error');
+    });
+  };
+
   // Format currency
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', {
@@ -154,24 +156,49 @@ const PurchaseOrderList = () => {
   };
 
   // Filter purchase orders based on current filters
-  const filteredOrders = purchaseOrders.filter((order) => {
-    const matchesSearch = !localFilters.search || 
-      order.poNumber?.toLowerCase().includes(localFilters.search.toLowerCase()) ||
-      order.supplierName?.toLowerCase().includes(localFilters.search.toLowerCase());
-    
-    const matchesStatus = !localFilters.status || 
-      order.status?.toLowerCase() === localFilters.status.toLowerCase();
-    
-    const orderDate = new Date(order.orderDate);
-    const fromDate = localFilters.dateRange.from ? new Date(localFilters.dateRange.from) : null;
-    const toDate = localFilters.dateRange.to ? new Date(localFilters.dateRange.to) : null;
-    
-    const matchesDateRange = 
-      (!fromDate || orderDate >= fromDate) && 
-      (!toDate || orderDate <= new Date(toDate.getTime() + 24 * 60 * 60 * 1000));
-    
-    return matchesSearch && matchesStatus && matchesDateRange;
-  });
+  const filteredOrders = useMemo(() => {
+    return purchaseOrders.filter((order) => {
+      const matchesSearch = !localFilters.search || 
+        order.poNumber?.toLowerCase().includes(localFilters.search.toLowerCase()) ||
+        order.supplierName?.toLowerCase().includes(localFilters.search.toLowerCase());
+      
+      const matchesStatus = !localFilters.status || 
+        order.status?.toLowerCase() === localFilters.status.toLowerCase();
+      
+      const orderDate = new Date(order.orderDate);
+      const fromDate = localFilters.dateRange.from ? new Date(localFilters.dateRange.from) : null;
+      const toDate = localFilters.dateRange.to ? new Date(localFilters.dateRange.to) : null;
+      
+      const matchesDateRange = 
+        (!fromDate || orderDate >= fromDate) && 
+        (!toDate || orderDate <= new Date(toDate.getTime() + 24 * 60 * 60 * 1000));
+      
+      return matchesSearch && matchesStatus && matchesDateRange;
+    });
+  }, [purchaseOrders, localFilters]);
+  
+  // Calculate pagination
+  const totalItems = filteredOrders.length;
+  const totalPages = Math.ceil(totalItems / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const paginatedOrders = filteredOrders.slice(startIndex, startIndex + pageSize);
+  
+  // Handle page change
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    window.scrollTo(0, 0);
+  };
+  
+  // Handle page size change
+  const handlePageSizeChange = (e) => {
+    setPageSize(Number(e.target.value));
+    setCurrentPage(1); // Reset to first page when changing page size
+  };
+  
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [localFilters]);
 
   if (loading && purchaseOrders.length === 0) {
     return (
@@ -203,11 +230,27 @@ const PurchaseOrderList = () => {
 
   return (
     <div className="container mx-auto px-4 py-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Purchase Orders</h1>
-        <div className="flex space-x-3">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">Purchase Orders</h1>
+          <p className="text-sm text-gray-600">Manage your purchase orders</p>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+          <div className="w-full sm:w-auto">
+            <select
+              value={pageSize}
+              onChange={handlePageSizeChange}
+              className="rounded-md border-gray-300 py-2 pl-3 pr-8 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 w-full"
+            >
+              {[5, 10, 20, 50].map((size) => (
+                <option key={size} value={size}>
+                  Show {size} per page
+                </option>
+              ))}
+            </select>
+          </div>
           <button
-            onClick={fetchPurchaseOrders}
+            onClick={handleRefresh}
             disabled={loading}
             className={`px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium ${
               loading ? 'bg-gray-100 text-gray-400' : 'bg-white text-gray-700 hover:bg-gray-50'
@@ -348,25 +391,25 @@ const PurchaseOrderList = () => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {filteredOrders.length > 0 ? (
-              filteredOrders.map((order) => (
+            {paginatedOrders.length > 0 ? (
+              paginatedOrders.map((order) => (
                 <tr key={order.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     <Link to={`/purchase-orders/${order.id}`} className="text-blue-600 hover:text-blue-900">
-                      {order.poNumber}
+                      {order.po_number}
                     </Link>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {order.supplierName || 'N/A'}
+                    {order.supplier_name || 'N/A'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {order.orderDate ? format(new Date(order.orderDate), 'MMM dd, yyyy') : 'N/A'}
+                    {order.order_date ? format(new Date(order.order_date), 'MMM dd, yyyy') : 'N/A'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {order.expectedDeliveryDate ? format(new Date(order.expectedDeliveryDate), 'MMM dd, yyyy') : 'N/A'}
+                    {order.expected_delivery_date ? format(new Date(order.expected_delivery_date), 'MMM dd, yyyy') : 'N/A'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {formatCurrency(order.totalAmount || 0)}
+                    {formatCurrency(order.total || 0)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeClass(order.status)}`}>
@@ -409,6 +452,71 @@ const PurchaseOrderList = () => {
             )}
           </tbody>
         </table>
+        
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="px-6 py-3 flex items-center justify-between border-t border-gray-200">
+            <div className="flex-1 flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-700">
+                  Showing <span className="font-medium">{Math.min(startIndex + 1, totalItems)}</span> to{' '}
+                  <span className="font-medium">
+                    {Math.min(startIndex + pageSize, totalItems)}
+                  </span>{' '}
+                  of <span className="font-medium">{totalItems}</span> orders
+                </p>
+              </div>
+              <div className="flex items-center space-x-2">
+                <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                  <button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <span className="sr-only">Previous</span>
+                    <FiChevronLeft className="h-5 w-5" />
+                  </button>
+                  
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+                    
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => handlePageChange(pageNum)}
+                        className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                          currentPage === pageNum
+                            ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
+                            : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                  
+                  <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <span className="sr-only">Next</span>
+                    <FiChevronRight className="h-5 w-5" />
+                  </button>
+                </nav>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Delete Confirmation Modal */}

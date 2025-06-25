@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { 
-  FiEdit2, 
-  FiPlus, 
-  FiArrowLeft, 
-  FiFileText, 
+import {
+  FiEdit2,
+  FiPlus,
+  FiArrowLeft,
+  FiFileText,
   FiShoppingBag,
   FiPhone,
   FiMail,
@@ -18,16 +18,22 @@ import {
   FiClock,
   FiXCircle
 } from "react-icons/fi";
+import { useDispatch, useSelector } from "react-redux";
+import { getPurchaseOrderById } from "../redux/purchaseOrderSlice";
 
 const PurchaseOrderDetails = () => {
-  const { id } = useParams();
-  const [activeTab, setActiveTab] = useState('items');
-  
+  const { uuid } = useParams();
+  const dispatch = useDispatch();
+  const { currentOrder } = useSelector((state) => state.purchaseOrder);
+  console.log('Current Order:', currentOrder);
   // Mock data - replace with actual data from API
-  const purchaseOrder = {
-    id: id || 'PO-1001',
+  useEffect(() => {
+    dispatch(getPurchaseOrderById(uuid));
+  }, [uuid]);
+  const purchaseOrder = currentOrder ? { ...currentOrder, supplier: { ...(currentOrder.supplier[0] || {}) } } : {
+    id: uuid || 'PO-1001',
     poNumber: 'PO-1001',
-    date: '2023-06-15',
+    orderDate: '2023-06-15',
     status: 'completed', // draft, sent, received, cancelled
     supplier: {
       id: 'SUP-001',
@@ -35,29 +41,29 @@ const PurchaseOrderDetails = () => {
       contactPerson: 'John Smith',
       email: 'john@globalsuppliers.com',
       phone: '+1 (555) 123-4567',
-      gstNumber: '22AAAAA0000A1Z5',
+      gst_number: '22AAAAA0000A1Z5',
       address: '123 Business St, Suite 100, New York, NY 10001',
     },
-    deliveryDate: '2023-06-30',
-    paymentTerms: 'Net 30',
+    expectedDeliveryDate: '2023-06-30',
+    terms: 'Net 30',
     notes: 'Please ensure all items are properly packaged.',
     items: [
       {
         id: 'ITEM-001',
-        name: 'Premium Groundnut',
+        productName: 'Premium Groundnut',
         description: 'High-quality groundnut for processing',
         quantity: 100,
         unit: 'kg',
-        unitPrice: 2.50,
+        unit_price: 2.50,
         total: 250.00,
       },
       {
         id: 'ITEM-002',
-        name: 'Organic Peanuts',
+        productName: 'Organic Peanuts',
         description: 'Premium organic peanuts',
         quantity: 50,
         unit: 'kg',
-        unitPrice: 3.20,
+        unit_price: 3.20,
         total: 160.00,
       },
     ],
@@ -65,9 +71,7 @@ const PurchaseOrderDetails = () => {
     tax: 73.80,
     shipping: 50.00,
     total: 533.80,
-    createdBy: 'John Doe',
     createdAt: '2023-06-15T10:30:00.000Z',
-    updatedAt: '2023-06-15T10:30:00.000Z',
   };
 
   // Format date to readable format
@@ -128,7 +132,7 @@ const PurchaseOrderDetails = () => {
               Purchase Order #{purchaseOrder.poNumber}
             </h3>
             <p className="mt-1 max-w-2xl text-sm text-gray-500">
-              Created on {formatDate(purchaseOrder.date)}
+              Created on {formatDate(purchaseOrder.orderDate)}
             </p>
           </div>
           <div className="mt-4 sm:mt-0">
@@ -152,7 +156,7 @@ const PurchaseOrderDetails = () => {
               </p>
             </div>
           </div>
-          
+
           <div className="flex items-start">
             <div className="flex-shrink-0 h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
               <FiCalendar className="h-6 w-6 text-green-600" />
@@ -160,11 +164,11 @@ const PurchaseOrderDetails = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Order Date</p>
               <p className="text-lg font-semibold text-gray-900">
-                {formatDate(purchaseOrder.date)}
+                {formatDate(purchaseOrder.orderDate)}
               </p>
             </div>
           </div>
-          
+
           <div className="flex items-start">
             <div className="flex-shrink-0 h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
               <FiTruck className="h-6 w-6 text-purple-600" />
@@ -172,11 +176,11 @@ const PurchaseOrderDetails = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Delivery Date</p>
               <p className="text-lg font-semibold text-gray-900">
-                {purchaseOrder.deliveryDate ? formatDate(purchaseOrder.deliveryDate) : 'N/A'}
+                {purchaseOrder.expectedDeliveryDate ? formatDate(purchaseOrder.expectedDeliveryDate) : 'N/A'}
               </p>
             </div>
           </div>
-          
+
           <div className="flex items-start">
             <div className="flex-shrink-0 h-10 w-10 rounded-full bg-yellow-100 flex items-center justify-center">
               <FiCreditCard className="h-6 w-6 text-yellow-600" />
@@ -184,7 +188,7 @@ const PurchaseOrderDetails = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Payment Terms</p>
               <p className="text-lg font-semibold text-gray-900">
-                {purchaseOrder.paymentTerms || 'N/A'}
+                {purchaseOrder.terms || 'N/A'}
               </p>
             </div>
           </div>
@@ -220,10 +224,10 @@ const PurchaseOrderDetails = () => {
               <FiPhone className="inline mr-2 h-4 w-4 text-gray-400" />
               {purchaseOrder.supplier.phone}
             </p>
-            {purchaseOrder.supplier.gstNumber && (
+            {purchaseOrder.supplier.gst_number && (
               <p className="mt-1 text-sm text-gray-900">
                 <FiCreditCard className="inline mr-2 h-4 w-4 text-gray-400" />
-                GST: {purchaseOrder.supplier.gstNumber}
+                GST: {purchaseOrder.supplier.gst_number}
               </p>
             )}
           </div>
@@ -267,7 +271,7 @@ const PurchaseOrderDetails = () => {
             {purchaseOrder.items.map((item) => (
               <tr key={item.id}>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900">{item.name}</div>
+                  <div className="text-sm font-medium text-gray-900">{item.productName}</div>
                   {item.description && (
                     <div className="text-sm text-gray-500">{item.description}</div>
                   )}
@@ -276,10 +280,10 @@ const PurchaseOrderDetails = () => {
                   {item.quantity} {item.unit}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-500">
-                  {formatCurrency(item.unitPrice)}
+                  {formatCurrency(item.unit_price)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900">
-                  {formatCurrency(item.total)}
+                  {formatCurrency(item.total||item.unit_price*item.quantity)}
                 </td>
               </tr>
             ))}
@@ -301,14 +305,14 @@ const PurchaseOrderDetails = () => {
                 {formatCurrency(purchaseOrder.tax)}
               </td>
             </tr>
-            <tr>
+            {/* <tr>
               <td colSpan="3" className="px-6 py-3 text-right text-sm font-medium text-gray-500">
                 Shipping
               </td>
               <td className="px-6 py-3 text-right text-sm font-medium text-gray-900">
                 {formatCurrency(purchaseOrder.shipping)}
               </td>
-            </tr>
+            </tr> */}
             <tr>
               <td colSpan="3" className="px-6 py-3 text-right text-sm font-bold text-gray-900">
                 Total
@@ -342,7 +346,7 @@ const PurchaseOrderDetails = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       <div className="md:flex md:items-center md:justify-between mb-6">
-        <div className="flex-1 min-w-0">
+        {/* <div className="flex-1 min-w-0">
           <div className="flex items-center">
             <Link
               to="/purchase-orders"
@@ -357,7 +361,7 @@ const PurchaseOrderDetails = () => {
           <div className="mt-1 flex flex-col sm:flex-row sm:flex-wrap sm:space-x-6">
             <div className="mt-2 flex items-center text-sm text-gray-500">
               <FiCalendar className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" />
-              {formatDate(purchaseOrder.date)}
+              {formatDate(purchaseOrder.orderDate)}
             </div>
             <div className="mt-2 flex items-center text-sm text-gray-500">
               <FiShoppingBag className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" />
@@ -368,14 +372,15 @@ const PurchaseOrderDetails = () => {
               {formatCurrency(purchaseOrder.total)}
             </div>
           </div>
-        </div>
+        </div> */}
         <div className="mt-4 flex space-x-3 md:mt-0 md:ml-4">
           <button
             type="button"
             className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
-            <FiEdit2 className="-ml-1 mr-2 h-5 w-5 text-gray-500" />
-            Edit
+            <Link to={`/purchase-orders/${uuid}/edit`} className="flex">
+              <FiEdit2 className="-ml-1 mr-2 h-5 w-5 text-gray-500" />
+              Edit</Link>
           </button>
           <button
             type="button"

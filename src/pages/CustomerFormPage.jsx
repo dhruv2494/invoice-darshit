@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { FiArrowLeft, FiLoader } from "react-icons/fi";
 import DashboardLayout from "../components/DashboardLayout";
 import CustomerForm from "../components/customers/CustomerForm";
-import { getCustomerById, getCustomers } from "../redux/customerSlice";
+import { getCustomerById, getCustomers, setSelectedCustomer } from "../redux/customerSlice";
 import { showToast } from "../modules/utils";
 
 const CustomerFormPage = () => {
@@ -20,20 +20,18 @@ const CustomerFormPage = () => {
 
   useEffect(() => {
     if (id && id !== 'new') {
-      dispatch(getCustomerById(id))
-        .unwrap()
-        .catch(err => {
-          showToast(err.message || 'Failed to load customer', 'error');
-          navigate('/customers');
-        });
+      dispatch(getCustomerById(id)).unwrap().catch(err => {
+        showToast(err.message || 'Failed to load customer', 'error');
+        navigate('/customers');
+      });
     } else {
-      // Reset selected customer when adding new
-      dispatch({ type: 'customer/setSelectedCustomer', payload: null });
+      // Use the new action to reset the selected customer for 'new' form
+      dispatch(setSelectedCustomer(null));
     }
-    
-    // Clean up selected customer when component unmounts
+
+    // Cleanup on unmount
     return () => {
-      dispatch({ type: 'customer/setSelectedCustomer', payload: null });
+      dispatch(setSelectedCustomer(null));
     };
   }, [id, dispatch, navigate]);
 

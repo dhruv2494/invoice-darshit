@@ -6,10 +6,11 @@ import { showToast } from "../modules/utils";
 // Async Thunks
 export const getPurchaseOrders = createAsyncThunk(
   "purchaseOrder/getAll",
-  async (_, { rejectWithValue }) => {
+  async (customerId, { rejectWithValue }) => {
     try {
-      const response = await API.get("/po/Get");
-      return response.data?.list || [];
+      const url = customerId ? `/api/purchase-orders?supplier_id=${customerId}` : '/api/purchase-orders';
+      const response = await API.get(url);
+      return response.data?.data || [];
     } catch (error) {
       console.error("Error fetching purchase orders:", error);
       return rejectWithValue(error.response?.data || "Failed to fetch purchase orders");
@@ -21,24 +22,11 @@ export const getPurchaseOrderById = createAsyncThunk(
   "purchaseOrder/getById",
   async (id, { rejectWithValue }) => {
     try {
-      const response = await API.get(`/po/Get/${id}`);
-      return response.data;
+      const response = await API.get(`/api/purchase-orders/${id}`);
+      return response.data?.data;
     } catch (error) {
       console.error(`Error fetching purchase order ${id}:`, error);
       return rejectWithValue(error.response?.data || "Failed to fetch purchase order");
-    }
-  }
-);
-
-export const getPurchaseOrdersByCustomer = createAsyncThunk(
-  "purchaseOrder/getByCustomer",
-  async (customerId, { rejectWithValue }) => {
-    try {
-      const response = await API.get(`/po/customer/${customerId}`);
-      return response.data?.list || [];
-    } catch (error) {
-      console.error(`Error fetching purchase orders for customer ${customerId}:`, error);
-      return rejectWithValue(error.response?.data || "Failed to fetch customer's purchase orders");
     }
   }
 );
@@ -47,9 +35,9 @@ export const createPurchaseOrder = createAsyncThunk(
   "purchaseOrder/create",
   async (orderData, { rejectWithValue }) => {
     try {
-      const response = await API.post("/po/AddUpdate", orderData);
+      const response = await API.post("/api/purchase-orders", orderData);
       showToast("Purchase order created successfully!", "success");
-      return response.data;
+      return response.data?.data;
     } catch (error) {
       console.error("Error creating purchase order:", error);
       showToast(error.response?.data?.message || "Failed to create purchase order", "error");
@@ -62,9 +50,9 @@ export const updatePurchaseOrder = createAsyncThunk(
   "purchaseOrder/update",
   async ({ id, ...orderData }, { rejectWithValue }) => {
     try {
-      const response = await API.put(`/po/AddUpdate/${id}`, orderData);
+      const response = await API.put(`/api/purchase-orders/${id}`, orderData);
       showToast("Purchase order updated successfully!", "success");
-      return response.data;
+      return response.data?.data;
     } catch (error) {
       console.error(`Error updating purchase order ${id}:`, error);
       showToast(error.response?.data?.message || "Failed to update purchase order", "error");
@@ -73,40 +61,11 @@ export const updatePurchaseOrder = createAsyncThunk(
   }
 );
 
-export const addEditPurchaseOrder = createAsyncThunk(
-  "purchaseOrder/addEdit",
-  async (orderData, { rejectWithValue, dispatch }) => {
-    try {
-      const { id, ...data } = orderData;
-      let response;
-      
-      if (id) {
-        // Update existing order
-        response = await API.put(`/po/AddUpdate/${id}`, data);
-        showToast("Purchase order updated successfully!", "success");
-      } else {
-        // Create new order
-        response = await API.post("/po/AddUpdate", data);
-        showToast("Purchase order created successfully!", "success");
-      }
-      
-      // Refresh the orders list
-      dispatch(getPurchaseOrders());
-      return response.data;
-    } catch (error) {
-      const errorMessage = error.response?.data?.message || 
-                         (orderData.id ? "Failed to update purchase order" : "Failed to create purchase order");
-      showToast(errorMessage, "error");
-      return rejectWithValue(error.response?.data || errorMessage);
-    }
-  }
-);
-
 export const deletePurchaseOrder = createAsyncThunk(
   "purchaseOrder/delete",
   async (id, { rejectWithValue }) => {
     try {
-      await API.delete(`/po/Delete/${id}`);
+      await API.delete(`/api/purchase-orders/${id}`);
       showToast("Purchase order deleted successfully!", "success");
       return id;
     } catch (error) {

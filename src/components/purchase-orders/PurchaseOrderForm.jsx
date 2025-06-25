@@ -6,17 +6,19 @@ import Select from 'react-select';
 import { 
   createPurchaseOrder, 
   updatePurchaseOrder,
-  resetCurrentOrder
+  resetCurrentOrder,
+  getPurchaseOrderById
 } from '../../redux/purchaseOrderSlice';
-import { getCustomers } from '../../redux/customerSlice';
+import { getCustomerById, getCustomers } from '../../redux/customerSlice';
 import { showToast } from '../../modules/utils';
 import { FiX, FiPlus, FiTrash2, FiSave, FiXCircle } from 'react-icons/fi';
+import { Link, useParams } from 'react-router-dom';
 
 // Validation Schema
 const purchaseOrderSchema = Yup.object().shape({
   poNumber: Yup.string().required('PO Number is required'),
   orderDate: Yup.date().required('Order Date is required'),
-  expectedDeliveryDate: Yup.date().required('Expected Delivery Date is required'),
+  expectedDeliveryDate: Yup.date().nullable(),
   supplierId: Yup.string().required('Supplier is required'),
   status: Yup.string().required('Status is required'),
   notes: Yup.string(),
@@ -24,7 +26,7 @@ const purchaseOrderSchema = Yup.object().shape({
   items: Yup.array()
     .of(
       Yup.object().shape({
-        productId: Yup.string().required('Product is required'),
+        productName: Yup.string().required('Product is required'),
         description: Yup.string().required('Description is required'),
         quantity: Yup.number()
           .required('Quantity is required')
@@ -43,16 +45,18 @@ const purchaseOrderSchema = Yup.object().shape({
 const PurchaseOrderForm = ({ onClose, initialValues: propInitialValues = {}, isEdit = false, onSuccess }) => {
   const dispatch = useDispatch();
   const { customers } = useSelector((state) => state.customer);
-  const { status } = useSelector((state) => state.purchaseOrder);
-  
+  const { status,currentOrder } = useSelector((state) => state.purchaseOrder);
+  const { uuid } = useParams();
   // Format customers for react-select
   const customerOptions = useMemo(() => 
     customers.map(customer => ({
-      value: customer.uuid,
+      value: customer.id,
       label: customer.name
     })),
     [customers]
   );
+
+  console.log('Current Order:', currentOrder);
   
   // Custom select component that works with Formik
   const CustomSelect = ({ options, field, form, ...props }) => {
@@ -87,22 +91,52 @@ const PurchaseOrderForm = ({ onClose, initialValues: propInitialValues = {}, isE
 
   // Set initial values
   const getInitialValues = () => {
-    // If we have propInitialValues and it's not an empty object
-    if (propInitialValues && Object.keys(propInitialValues).length > 0) {
+    if (isEdit && currentOrder && Object.keys(currentOrder).length > 0) {
+      // Map currentOrder to match form field names
       return {
-        ...propInitialValues,
-        items: (propInitialValues.items && propInitialValues.items.length > 0) 
-          ? propInitialValues.items 
+        poNumber: currentOrder.poNumber || '',
+        orderDate: currentOrder.orderDate ? new Date(currentOrder.orderDate).toISOString().split('T')[0] : '',
+        expectedDeliveryDate: currentOrder.expectedDeliveryDate
+          ? new Date(currentOrder.expectedDeliveryDate).toISOString().split('T')[0]
+          : '',
+        supplierId: currentOrder.supplierId || '',
+        status: currentOrder.status || 'draft',
+        notes: currentOrder.notes || '',
+        terms: currentOrder.terms || '',
+        items: currentOrder.items?.length > 0
+          ? currentOrder.items.map(item => ({
+              productName: item.productName || '',
+              description: item.description || '',
+              quantity: parseFloat(item.quantity) || 1,
+              unitPrice: parseFloat(item.unit_price) || 0,
+              taxRate: parseFloat(item.tax_rate) || 0,
+            }))
           : [{
-              productId: '',
-              description: '',
+              productName: 'groundnut',
+              description: 'Default product description',
               quantity: 1,
               unitPrice: 0,
               taxRate: 0,
-            }]
+            }],
       };
     }
-    
+  
+    // Fallback to propInitialValues or default values
+    if (propInitialValues && Object.keys(propInitialValues).length > 0) {
+      return {
+        ...propInitialValues,
+        items: propInitialValues.items?.length > 0
+          ? propInitialValues.items
+          : [{
+              productName: 'groundnut',
+              description: 'Default product description',
+              quantity: 1,
+              unitPrice: 0,
+              taxRate: 0,
+            }],
+      };
+    }
+  
     // Default values for a new purchase order
     return {
       poNumber: `PO-${Date.now()}`,
@@ -114,8 +148,8 @@ const PurchaseOrderForm = ({ onClose, initialValues: propInitialValues = {}, isE
       terms: '',
       items: [
         {
-          productId: '',
-          description: '',
+          productName: 'groundnut',
+          description: 'Default product description',
           quantity: 1,
           unitPrice: 0,
           taxRate: 0,
@@ -124,37 +158,44 @@ const PurchaseOrderForm = ({ onClose, initialValues: propInitialValues = {}, isE
     };
   };
   
-  const initialValues = getInitialValues();
-  
+  const initialValues = useMemo(() => getInitialValues(), [currentOrder, isEdit, propInitialValues]);  
   console.log('Initial Values:', initialValues); // Debug log
 
   // Fetch customers on component mount
   useEffect(() => {
     dispatch(getCustomers());
-    
-    // Clean up when component unmounts
+    if (isEdit && uuid) {
+      dispatch(getPurchaseOrderById(uuid)).then(() => {
+        console.log('Fetched currentOrder:', currentOrder); // Debug log
+      });
+    }
+  
     return () => {
       if (!isEdit && !propInitialValues?.id) {
         dispatch(resetCurrentOrder());
       }
     };
-  }, [dispatch, isEdit, propInitialValues?.id]);
+  }, [dispatch, isEdit, uuid, propInitialValues?.id]);
 
   // Handle form submission
   const handleSubmit = async (values, { setSubmitting }) => {
     try {
-      if (isEdit && propInitialValues?.id) {
-        await dispatch(updatePurchaseOrder({ id: propInitialValues.id, ...values })).unwrap();
-        showToast('Purchase order updated successfully', 'success');
-      } else {
-        await dispatch(createPurchaseOrder(values)).unwrap();
-        showToast('Purchase order created successfully', 'success');
-      }
+      const action = isEdit
+        ? updatePurchaseOrder({ id: uuid, ...values })
+        : createPurchaseOrder(values);
+
+      await dispatch(action).unwrap();
+
+      showToast(
+        isEdit ? 'Purchase order updated successfully' : 'Purchase order created successfully',
+        'success'
+      );
+
       if (onSuccess) {
         onSuccess();
-      } else {
-        onClose();
       }
+      onClose(); 
+
     } catch (error) {
       console.error('Error saving purchase order:', error);
       showToast(error.message || 'Failed to save purchase order', 'error');
@@ -304,8 +345,10 @@ const PurchaseOrderForm = ({ onClose, initialValues: propInitialValues = {}, isE
               {/* Supplier and Status */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-2 flex justify-between">
                     Supplier
+
+                    <Link to="/customers/new" className="ml-2 text-blue-500 hover:underline">Add Customer</Link>
                   </label>
                   <Field
                     name="supplierId"
@@ -365,9 +408,9 @@ const PurchaseOrderForm = ({ onClose, initialValues: propInitialValues = {}, isE
                               </label>
                               <Field
                                 type="text"
-                                name={`items.${index}.productId`}
+                                name={`items.${index}.productName`}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                value="groundnut"
+                                // value="groundnut"
                               />
                               <input type="hidden" name={`items.${index}.description`} value="Groundnut" />
                             </div>
@@ -466,7 +509,7 @@ const PurchaseOrderForm = ({ onClose, initialValues: propInitialValues = {}, isE
                           type="button"
                           onClick={() =>
                             push({
-                              productId: '',
+                              productName: '',
                               description: '',
                               quantity: 1,
                               unitPrice: 0,

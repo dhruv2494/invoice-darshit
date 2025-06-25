@@ -227,7 +227,7 @@ const Dashboard = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {purchaseOrders.slice(0, 5).map((order) => (
+                {(purchaseOrders||[]).slice(0, 5).map((order) => (
                   <tr key={order._id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
                       <Link to={`/purchase-orders/${order._id}`}>
@@ -250,11 +250,11 @@ const Dashboard = () => {
                       {new Date(order.createdAt).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      ${order.total?.toFixed(2) || '0.00'}
+                      ${order?.total || '0.00'}
                     </td>
                   </tr>
                 ))}
-                {purchaseOrders.length === 0 && (
+                {(purchaseOrders||[]).length === 0 && (
                   <tr>
                     <td colSpan="5" className="px-6 py-4 text-center text-sm text-gray-500">
                       No orders found

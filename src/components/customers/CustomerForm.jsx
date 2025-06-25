@@ -58,19 +58,26 @@ const CustomerForm = ({
   // Handle form submission
   const handleSubmit = async (values, { setSubmitting }) => {
     try {
-      const resultAction = await dispatch(addEditCustomer(values));
+      // Ensure the payload includes the customer ID for updates.
+      const payload = { ...values };
+      if (isEdit) {
+        // The addEditCustomer thunk expects an 'id' field for updates.
+        payload.id = propInitialValues.id || propInitialValues.uuid;
+      }
+
+      const resultAction = await dispatch(addEditCustomer(payload));
+      
       if (addEditCustomer.fulfilled.match(resultAction)) {
-        showToast(
-          isEdit ? 'Customer updated successfully' : 'Customer added successfully',
-          'success'
-        );
+        // Success toast is handled in the thunk.
         onSuccess?.();
       } else {
-        throw new Error(resultAction.error?.message || 'Failed to save customer');
+        // Error toast is handled in the thunk.
+        // We throw an error to let Formik know the submission failed.
+        throw new Error(resultAction.payload || 'Failed to save customer');
       }
     } catch (error) {
-      showToast(error.message || 'An error occurred while saving the customer', 'error');
-      throw error; // Re-throw to let Formik know the submission failed
+      // Re-throwing the error ensures Formik's `isSubmitting` is set to false.
+      throw error;
     }
   };
 
