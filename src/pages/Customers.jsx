@@ -1,267 +1,422 @@
-import { ErrorMessage, Field, Form, Formik } from "formik";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import * as Yup from "yup";
-import ConfirmModal from "../components/ConfirmModal";
+import { useNavigate } from "react-router-dom";
+import { FiEdit2, FiTrash2, FiPlus, FiSearch, FiEye, FiX, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import DashboardLayout from "../components/DashboardLayout";
-import {
-  addEditCustomer,
-  deleteCustomer,
-  getCustomers,
-} from "../redux/customerSlice";
-
-// Validation schema using Yup
-const validationSchema = Yup.object({
-  name: Yup.string().required("Name is required"),
-  mobile: Yup.string()
-    .required("Mobile is required")
-    .matches(/^\d+$/, "Mobile must be a valid number"),
-});
+import ConfirmModal from "../components/common/ConfirmModal";
+import { deleteCustomer, getCustomers } from "../redux/customerSlice";
+import { showToast } from "../modules/utils";
 
 const Customers = () => {
-  const customers = useSelector((state) => state?.customer?.customers);
-  const [editingCustomer, setEditingCustomer] = useState(null);
-  const [deletePopup, setDeletePopup] = useState(false);
+  const { customers, loading, error } = useSelector((state) => state.customer || {});
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [customerToDelete, setCustomerToDelete] = useState(null);
-  const [showForm, setShowForm] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [filters, setFilters] = useState({
+    status: "",
+    dateFrom: "",
+    dateTo: ""
+  });
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   useEffect(() => {
     dispatch(getCustomers());
   }, [dispatch]);
 
-  const handleSearchChange = (e) => {
+  const handleSearch = (e) => {
     setSearchQuery(e.target.value);
   };
 
-  const filteredCustomers = customers.filter(
-    (customer) =>
-      customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      customer.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      customer.mobile.includes(searchQuery)
-  );
-
-  const handleFormSubmit = (values, { resetForm }) => {
-    dispatch(addEditCustomer(values));
-    setEditingCustomer(null);
-    resetForm();
-    setShowForm(false);
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilters(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
-  const handleEditClick = (customer) => {
-    setEditingCustomer(customer);
-    setShowForm(true);
+  const clearFilters = () => {
+    setFilters({
+      status: "",
+      dateFrom: "",
+      dateTo: ""
+    });
+    setSearchQuery("");
+  };
+
+  const filteredCustomers = useMemo(() => {
+    if (!customers) return [];
+    return customers.filter(customer => {
+      if (!customer) return false;
+    
+      const searchLower = searchQuery.toLowerCase();
+      const matchesSearch = 
+        customer.name?.toLowerCase().includes(searchLower) ||
+        customer.mobile?.includes(searchQuery) ||
+        customer.email?.toLowerCase().includes(searchLower) ||
+        (customer.gstNumber && customer.gstNumber.toLowerCase().includes(searchLower));
+      
+      // Apply status filter if set
+      const matchesStatus = !filters.status || 
+        (filters.status === 'active' && customer.isActive !== false) ||
+        (filters.status === 'inactive' && customer.isActive === false);
+      
+      return matchesSearch && matchesStatus;
+    });
+  }, [customers, searchQuery, filters.status]);
+
+  const handleEditCustomer = (customer) => {
+    navigate(`/customers/${customer.id}`);
+  };
+
+  const handleViewCustomer = (customer) => {
+    navigate(`/customer-details/${customer.id}`);
   };
 
   const handleAddClick = () => {
-    setEditingCustomer(null);
-    setShowForm(true);
+    navigate('/customers/new');
   };
 
   const handleDeleteClick = (customer) => {
     setCustomerToDelete(customer);
-    setDeletePopup(true);
+    setDeleteModalOpen(true);
   };
 
-  const confirmDelete = () => {
+  const handleDeleteConfirm = () => {
     if (customerToDelete) {
-      dispatch(deleteCustomer(customerToDelete.uuid));
-      setDeletePopup(false);
-      setCustomerToDelete(null);
+      dispatch(deleteCustomer(customerToDelete.uuid))
+        .unwrap()
+        .then(() => {
+          showToast("Customer deleted successfully", "success");
+          dispatch(getCustomers());
+        })
+        .catch((error) => {
+          showToast(error.message || "Failed to delete customer", "error");
+        });
     }
-  };
-
-  const cancelDelete = () => {
-    setDeletePopup(false);
+    setDeleteModalOpen(false);
     setCustomerToDelete(null);
   };
 
+  // Calculate pagination
+  const totalItems = filteredCustomers.length;
+  const totalPages = Math.ceil(totalItems / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const paginatedCustomers = filteredCustomers.slice(startIndex, startIndex + pageSize);
+
+  // Handle page change
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    window.scrollTo(0, 0);
+  };
+
+  // Handle page size change
+  const handlePageSizeChange = (e) => {
+    setPageSize(Number(e.target.value));
+    setCurrentPage(1); // Reset to first page when changing page size
+  };
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters, searchQuery]);
+
   return (
-    <DashboardLayout>
-      <div className="px-6 py-4">
-        <h2 className="text-3xl font-semibold mb-6">Customer Management</h2>
-
-        {/* Add Customer Button */}
-        <button
-          onClick={handleAddClick}
-          className="mb-6 px-5 py-2.5 bg-green-600 text-white font-medium rounded-xl hover:bg-emerald-700 shadow-md transition cursor-pointer"
-        >
-          Add Customer
-        </button>
-
-        {/* Add or Edit Customer Form */}
-        {showForm && (
-          <div className="bg-white shadow-lg rounded-xl p-6 mb-8 border border-gray-100">
-            <h3 className="text-xl font-medium mb-4 text-indigo-600">
-              {editingCustomer ? "Edit Customer" : "Add New Customer"}
-            </h3>
-            <Formik
-              initialValues={{
-                name: editingCustomer ? editingCustomer.name : "",
-                mobile: editingCustomer ? editingCustomer.mobile : "",
-                address: editingCustomer ? editingCustomer.address : "",
-                uuid: editingCustomer ? editingCustomer.uuid : "",
-              }}
-              validationSchema={validationSchema}
-              onSubmit={handleFormSubmit}
-              enableReinitialize={true}
-            >
-              <Form>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Name
-                    </label>
-                    <Field
-                      type="text"
-                      name="name"
-                      className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
-                      placeholder="Enter name"
-                    />
-                    <ErrorMessage
-                      name="name"
-                      component="div"
-                      className="text-red-500 text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Mobile
-                    </label>
-                    <Field
-                      type="text"
-                      name="mobile"
-                      className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
-                      placeholder="Enter mobile number"
-                    />
-                    <ErrorMessage
-                      name="mobile"
-                      component="div"
-                      className="text-red-500 text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                    Address
-                    </label>
-                    <Field
-                      type="address"
-                      name="address"
-                      className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
-                      placeholder="Enter address"
-                    />
-                    <ErrorMessage
-                      name="address"
-                      component="div"
-                      className="text-red-500 text-sm"
-                    />
-                  </div>
-                </div>
-                <div className="mt-6">
-                  <button
-                    type="submit"
-                    className="w-half mr-4 py-2 px-4 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 shadow-md transition cursor-pointer"
-                  >
-                    {editingCustomer ? "Update Customer" : "Add Customer"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowForm(false)}
-                    className="w-half py-2 px-4 bg-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-300 shadow-sm transition cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </Form>
-            </Formik>
+      <div className="px-4 sm:px-6 lg:px-8">
+        <div className="sm:flex sm:items-center sm:justify-between">
+          <div className="sm:flex-auto">
+            <h1 className="text-2xl font-bold text-gray-900">Customers</h1>
+            <p className="mt-1 text-sm text-gray-600">
+              Manage your customers and their information
+            </p>
           </div>
-        )}
+          <div className="mt-4 sm:mt-0 sm:flex sm:items-center">
+            <div className="mr-4">
+              <select
+                value={pageSize}
+                onChange={handlePageSizeChange}
+                className="rounded-md border-gray-300 py-2 pl-3 pr-8 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              >
+                {[5, 10, 20, 50].map((size) => (
+                  <option key={size} value={size}>
+                    Show {size} per page
+                  </option>
+                ))}
+              </select>
+            </div>
+            <button
+              type="button"
+              onClick={() => navigate("/customers/new")}
+              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              <FiPlus className="-ml-1 mr-2 h-5 w-5" />
+              Add Customer
+            </button>
+          </div>
+        </div>
 
-        {/* Search Input */}
-        <div className="mb-6">
-          <input
-            type="text"
-            placeholder="Search by name, email, or mobile..."
-            className="w-full px-4 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
-            value={searchQuery}
-            onChange={handleSearchChange}
-          />
+        {/* Search and Filter Bar */}
+        <div className="bg-white rounded-lg shadow p-4 mb-6">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="relative flex-grow">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <FiSearch className="h-4 w-4 text-gray-400" />
+              </div>
+              <input
+                type="text"
+                placeholder="Search customers..."
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                value={searchQuery}
+                onChange={handleSearch}
+              />
+            </div>
+            <div className="flex items-center space-x-2">
+              <select
+                name="status"
+                value={filters.status}
+                onChange={handleFilterChange}
+                className="block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+              >
+                <option value="">All Status</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+              <button
+                onClick={clearFilters}
+                className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                <FiX className="h-4 w-4 mr-1" /> Clear
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Customers Table */}
-        <div className="bg-white shadow-lg rounded-xl p-6 border border-gray-100">
-          <h3 className="text-xl font-medium mb-4 text-indigo-600">
-            Customer List
-          </h3>
+        <div className="bg-white shadow overflow-hidden sm:rounded-lg">
           <div className="overflow-x-auto">
-            <table className="w-full table-auto border-collapse">
-              <thead>
-                <tr className="bg-gray-100 text-left text-sm text-gray-700 font-semibold">
-                  <th className="px-4 py-2">Name</th>
-                  <th className="px-4 py-2">Mobile</th>
-                  <th className="px-4 py-2">address</th>
-                  <th className="px-4 py-2">Actions</th>
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Name
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Contact
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    GSTIN
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Address
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Actions
+                  </th>
                 </tr>
               </thead>
-              <tbody>
-                {filteredCustomers?.length > 0 ? (
-                  filteredCustomers.map((customer) => (
-                    <tr
-                      key={customer.uuid}
-                      className="border-b hover:bg-indigo-50 transition"
+              <tbody className="bg-white divide-y divide-gray-200">
+                {loading ? (
+                  <tr>
+                    <td
+                      colSpan="5"
+                      className="px-6 py-4 text-center text-sm text-gray-500"
                     >
-                      <td className="px-4 py-2 text-sm text-gray-700">
-                        {customer.name}
+                      Loading...
+                    </td>
+                  </tr>
+                ) : error ? (
+                  <tr>
+                    <td
+                      colSpan="5"
+                      className="px-6 py-4 text-center text-sm text-red-500"
+                    >
+                      Error loading customers: {error}
+                    </td>
+                  </tr>
+                ) : paginatedCustomers.length > 0 ? (
+                  paginatedCustomers.map((customer) => (
+                    <tr key={customer.uuid} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                            <span className="text-blue-600 font-medium">
+                              {customer.name?.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                          <div className="ml-4">
+                            <div className="text-sm font-medium text-gray-900">
+                              {customer.name}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              {customer.email}
+                            </div>
+                          </div>
+                        </div>
                       </td>
-                      <td className="px-4 py-2 text-sm text-gray-700">
-                        {customer.mobile}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          {customer.mobile}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {customer.phone || "N/A"}
+                        </div>
                       </td>
-                      <td className="px-4 py-2 text-sm text-gray-700">
-                        {customer.address}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {customer.gstNumber || "N/A"}
                       </td>
-                      <td className="px-4 py-2 text-sm text-gray-700 flex gap-4 cursor-pointer">
-                        <button
-                          onClick={() => handleEditClick(customer)}
-                          className="text-indigo-600 hover:text-indigo-800 font-medium transition cursor-pointer"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDeleteClick(customer)}
-                          className="text-rose-600 hover:text-rose-800 font-medium transition cursor-pointer"
-                        >
-                          Delete
-                        </button>
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-gray-900">
+                          {customer.address?.split("\n")[0] || "N/A"}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {customer.city}{" "}
+                          {customer.state && `, ${customer.state}`}{" "}
+                          {customer.pincode && `- ${customer.pincode}`}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex justify-end space-x-2">
+                          <button
+                            onClick={() => handleViewCustomer(customer)}
+                            className="text-green-600 hover:text-green-900 mr-2"
+                            title="View Details"
+                          >
+                            <FiEye className="w-5 h-5" />
+                          </button>
+                          <button
+                            onClick={() => handleEditCustomer(customer)}
+                            className="text-blue-600 hover:text-blue-900 mr-2"
+                            title="Edit"
+                          >
+                            <FiEdit2 className="w-5 h-5" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteClick(customer)}
+                            className="text-red-600 hover:text-red-900"
+                            title="Delete"
+                          >
+                            <FiTrash2 className="w-5 h-5" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
                     <td
-                      colSpan={4}
-                      className="px-4 py-2 text-sm text-center text-gray-500"
+                      colSpan="5"
+                      className="px-6 py-4 text-center text-sm text-gray-500"
                     >
-                      No customers found.
+                      No customers found. Try adjusting your search or add a new
+                      customer.
                     </td>
                   </tr>
                 )}
               </tbody>
             </table>
-          </div>
+            
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="px-6 py-3 flex items-center justify-between border-t border-gray-200">
+                <div className="flex-1 flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-700">
+                      Showing <span className="font-medium">{Math.min(startIndex + 1, totalItems)}</span> to{' '}
+                      <span className="font-medium">
+                        {Math.min(startIndex + pageSize, totalItems)}
+                      </span>{' '}
+                      of <span className="font-medium">{totalItems}</span> customers
+                    </p>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                      <button
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <span className="sr-only">Previous</span>
+                        <FiChevronLeft className="h-5 w-5" />
+                      </button>
+                      
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        let pageNum;
+                        if (totalPages <= 5) {
+                          pageNum = i + 1;
+                        } else if (currentPage <= 3) {
+                          pageNum = i + 1;
+                        } else if (currentPage >= totalPages - 2) {
+                          pageNum = totalPages - 4 + i;
+                        } else {
+                          pageNum = currentPage - 2 + i;
+                        }
+                        
+                        return (
+                          <button
+                            key={pageNum}
+                            onClick={() => handlePageChange(pageNum)}
+                            className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                              currentPage === pageNum
+                                ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
+                                : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                            }`}
+                          >
+                            {pageNum}
+                          </button>
+                        );
+                      })}
+                      
+                      <button
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <span className="sr-only">Next</span>
+                        <FiChevronRight className="h-5 w-5" />
+                      </button>
+                    </nav>
+                  </div>
+                </div>
+              </div>
+            )}
+            </div>
         </div>
-      </div>
 
-      {/* Confirm Modal for Deletion */}
-      <ConfirmModal
-        isOpen={deletePopup}
-        title="Confirm Deletion"
-        message={`Are you sure you want to delete "${customerToDelete?.name}"?`}
-        onCancel={cancelDelete}
-        onConfirm={confirmDelete}
-      />
-    </DashboardLayout>
+
+
+        {/* Delete Confirmation Modal */}
+        <ConfirmModal
+          isOpen={deleteModalOpen}
+          onClose={() => setDeleteModalOpen(false)}
+          onConfirm={handleDeleteConfirm}
+          title="Delete Customer"
+          message={customerToDelete ? `Are you sure you want to delete ${customerToDelete.name}? This action cannot be undone.` : "Delete this customer?"}
+          confirmText="Delete"
+          cancelText="Cancel"
+          isDanger={true}
+        />
+      </div>
   );
 };
 
