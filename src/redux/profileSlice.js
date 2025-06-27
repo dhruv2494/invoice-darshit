@@ -6,6 +6,7 @@ const initialState = {
   profile: null,
   loading: false,
   error: null,
+  dashboardData: null,
 };
 
 // Async thunks
@@ -36,7 +37,14 @@ export const updatePassword = createAsyncThunk('profile/updatePassword', async (
     return thunkAPI.rejectWithValue(error.response?.data?.message || 'Failed to update password');
   }
 });
-
+export const getDashboardData = createAsyncThunk('profile/getDashboardData', async (_, thunkAPI) => {
+  try {
+    const response = await API.get('/api/dashboard');
+    return response.data;
+  } catch (error) {
+    return thunkAPI.rejectWithValue(error.response?.data?.message || 'Failed to fetch dashboard data');
+  }
+});
 const profileSlice = createSlice({
   name: 'profile',
   initialState,
@@ -44,6 +52,7 @@ const profileSlice = createSlice({
     clearProfile: (state) => {
       state.profile = null;
       state.error = null;
+      state.dashboardData = null;
     },
     updateProfileInRedux: (state, action) => {
       state.profile = {...state.profile, ...action.payload};
@@ -86,6 +95,19 @@ const profileSlice = createSlice({
         // state.profile = action.payload?.data
       })
       .addCase(updatePassword.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // Dashboard Data
+      .addCase(getDashboardData.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getDashboardData.fulfilled, (state, action) => {
+        state.loading = false;
+        state.dashboardData = action.payload?.data;
+      })
+      .addCase(getDashboardData.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })

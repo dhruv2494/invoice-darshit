@@ -1,18 +1,24 @@
+import { useEffect } from "react";
+import {
+  FiCheckCircle,
+  FiClock,
+  FiDollarSign,
+  FiEdit,
+  FiInfo,
+  FiPlusCircle,
+  FiShoppingCart,
+  FiTrash,
+  FiTrendingUp,
+  FiUsers,
+  FiXCircle
+} from "react-icons/fi";
+import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import DashboardLayout from "../components/DashboardLayout";
-import { 
-  FiUsers, 
-  FiShoppingCart, 
-  FiCheckCircle, 
-  FiDollarSign, 
-  FiTrendingUp, 
-  FiClock,
-  FiAlertCircle
-} from "react-icons/fi";
-import { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
 import { getCustomers } from "../redux/customerSlice";
+import { getDashboardData } from "../redux/profileSlice";
 import { getPurchaseOrders } from "../redux/purchaseOrderSlice";
+import { timeAgo } from "../utils/utils";
 
 // Chart Components (Using mock data for now)
 const SalesChart = () => (
@@ -22,6 +28,23 @@ const SalesChart = () => (
     </div>
   </div>
 );
+const getActivityIcon = (status) => {
+  switch (status) {
+    case 'New':
+      return <FiPlusCircle className="text-blue-500" />;
+    case 'Completed':
+      return <FiCheckCircle className="text-green-500" />;
+    case 'Updated':
+      return <FiEdit className="text-yellow-500" />;
+    case 'Deleted':
+      return <FiTrash className="text-red-500" />;
+    case 'Failed':
+      return <FiXCircle className="text-red-500" />;
+    default:
+      return <FiInfo className="text-gray-500" />;
+  }
+};
+
 
 const RecentActivity = ({ activities }) => (
   <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
@@ -29,22 +52,26 @@ const RecentActivity = ({ activities }) => (
       <h3 className="font-medium text-gray-800">Recent Activities</h3>
     </div>
     <div className="divide-y divide-gray-100">
-      {activities.map((activity, index) => (
+      {activities?.length > 0 ? activities.map((activity, index) => (
         <div key={index} className="p-4 hover:bg-gray-50 transition-colors">
           <div className="flex items-start">
             <div className={`p-2 rounded-full ${activity.iconBg} mr-3`}>
-              {activity.icon}
+              {getActivityIcon(activity.status)}
             </div>
             <div className="flex-1">
               <p className="text-sm text-gray-800">{activity.title}</p>
-              <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
+              <p className="text-xs text-gray-500 mt-1">{activity.created_at && timeAgo(activity.created_at)}</p>
             </div>
-            <span className={`text-xs px-2 py-1 rounded-full ${activity.statusBg}`}>
+            <span className={`text-xs px-2 py-1 rounded-full ${activity?.statusBg || 'bg-green-50 text-green-700'}`}>
               {activity.status}
             </span>
           </div>
         </div>
-      ))}
+      )) : (
+        <div className="p-4 text-center text-sm text-gray-500">
+          No activities found
+        </div>
+      )}
     </div>
   </div>
 );
@@ -75,10 +102,11 @@ const Dashboard = () => {
   const dispatch = useDispatch();
   const customers = useSelector((state) => state?.customer?.customers) || [];
   const { purchaseOrders = [] } = useSelector((state) => state.purchaseOrder) || {};
-
+  const dashboardData = useSelector((state) => state.profile.dashboardData) || {};
   useEffect(() => {
     dispatch(getCustomers());
     dispatch(getPurchaseOrders());
+    dispatch(getDashboardData());
   }, [dispatch]);
 
   // Calculate metrics
@@ -92,40 +120,41 @@ const Dashboard = () => {
   }).format(purchaseOrders.reduce((sum, order) => sum + (order.total || 0), 0));
 
   // Mock recent activities
-  const recentActivities = [
-    {
-      title: 'New order #1234 received',
-      time: '2 min ago',
-      icon: <FiShoppingCart className="text-blue-500" />,
-      iconBg: 'bg-blue-100',
-      status: 'New',
-      statusBg: 'bg-blue-50 text-blue-700'
-    },
-    {
-      title: 'Payment of $1,234 received',
-      time: '1 hour ago',
-      icon: <FiDollarSign className="text-green-500" />,
-      iconBg: 'bg-green-100',
-      status: 'Completed',
-      statusBg: 'bg-green-50 text-green-700'
-    },
-    {
-      title: 'Order #1232 failed to process',
-      time: '3 hours ago',
-      icon: <FiAlertCircle className="text-red-500" />,
-      iconBg: 'bg-red-100',
-      status: 'Failed',
-      statusBg: 'bg-red-50 text-red-700'
-    },
-    {
-      title: 'New customer registered',
-      time: '5 hours ago',
-      icon: <FiUsers className="text-purple-500" />,
-      iconBg: 'bg-purple-100',
-      status: 'New',
-      statusBg: 'bg-blue-50 text-blue-700'
-    },
-  ];
+  const recentActivities = (dashboardData?.recentActivities||[]) 
+  // || [
+  //   {
+  //     title: 'New order #1234 received',
+  //     time: '2 min ago',
+  //     icon: <FiShoppingCart className="text-blue-500" />,
+  //     iconBg: 'bg-blue-100',
+  //     status: 'New',
+  //     statusBg: 'bg-blue-50 text-blue-700'
+  //   },
+  //   {
+  //     title: 'Payment of $1,234 received',
+  //     time: '1 hour ago',
+  //     icon: <FiDollarSign className="text-green-500" />,
+  //     iconBg: 'bg-green-100',
+  //     status: 'Completed',
+  //     statusBg: 'bg-green-50 text-green-700'
+  //   },
+  //   {
+  //     title: 'Order #1232 failed to process',
+  //     time: '3 hours ago',
+  //     icon: <FiAlertCircle className="text-red-500" />,
+  //     iconBg: 'bg-red-100',
+  //     status: 'Failed',
+  //     statusBg: 'bg-red-50 text-red-700'
+  //   },
+  //   {
+  //     title: 'New customer registered',
+  //     time: '5 hours ago',
+  //     icon: <FiUsers className="text-purple-500" />,
+  //     iconBg: 'bg-purple-100',
+  //     status: 'New',
+  //     statusBg: 'bg-blue-50 text-blue-700'
+  //   },
+  // ];
 
   return (
     <DashboardLayout>
@@ -147,31 +176,31 @@ const Dashboard = () => {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-          <StatCard 
-            title="Total Revenue" 
-            value={revenue} 
-            change="+12.5% from last month" 
+          <StatCard
+            title="Total Revenue"
+            value={dashboardData?.total_revenue}
+            change="+12.5% from last month"
             icon={<FiDollarSign size={24} />}
             iconBg="bg-blue-500"
           />
-          <StatCard 
-            title="Total Customers" 
-            value={totalCustomers} 
-            change="+8.2% from last month" 
+          <StatCard
+            title="Total Customers"
+            value={totalCustomers}
+            change="+8.2% from last month"
             icon={<FiUsers size={24} />}
             iconBg="bg-green-500"
           />
-          <StatCard 
-            title="Total Orders" 
-            value={totalOrders} 
-            change="+5.7% from last month" 
+          <StatCard
+            title="Total Orders"
+            value={totalOrders}
+            change="+5.7% from last month"
             icon={<FiShoppingCart size={24} />}
             iconBg="bg-yellow-500"
           />
-          <StatCard 
-            title="Pending Orders" 
-            value={pendingOrders} 
-            change="+2.3% from last month" 
+          <StatCard
+            title="Pending Orders"
+            value={pendingOrders}
+            change="+2.3% from last month"
             icon={<FiClock size={24} />}
             iconBg="bg-red-500"
             changeType={pendingOrders > 0 ? 'decrease' : 'increase'}
@@ -191,7 +220,7 @@ const Dashboard = () => {
             </div>
             <SalesChart />
           </div>
-          
+
           <div className="lg:col-span-1">
             <RecentActivity activities={recentActivities} />
           </div>
@@ -227,7 +256,7 @@ const Dashboard = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {(purchaseOrders||[]).slice(0, 5).map((order) => (
+                {(purchaseOrders || []).slice(0, 5).map((order) => (
                   <tr key={order._id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
                       <Link to={`/purchase-orders/${order._id}`}>
@@ -238,11 +267,10 @@ const Dashboard = () => {
                       {order.supplier_name || 'N/A'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        order.status === 'completed' ? 'bg-green-100 text-green-800' :
-                        order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
+                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${order.status === 'completed' ? 'bg-green-100 text-green-800' :
+                          order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-gray-100 text-gray-800'
+                        }`}>
                         {order.status || 'N/A'}
                       </span>
                     </td>
@@ -254,7 +282,7 @@ const Dashboard = () => {
                     </td>
                   </tr>
                 ))}
-                {(purchaseOrders||[]).length === 0 && (
+                {(purchaseOrders || []).length === 0 && (
                   <tr>
                     <td colSpan="5" className="px-6 py-4 text-center text-sm text-gray-500">
                       No orders found
