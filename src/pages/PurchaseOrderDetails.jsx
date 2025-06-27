@@ -25,8 +25,6 @@ const PurchaseOrderDetails = () => {
   const { uuid } = useParams();
   const dispatch = useDispatch();
   const { currentOrder } = useSelector((state) => state.purchaseOrder);
-  console.log('Current Order:', currentOrder);
-  // Mock data - replace with actual data from API
   useEffect(() => {
     dispatch(getPurchaseOrderById(uuid));
   }, [uuid]);

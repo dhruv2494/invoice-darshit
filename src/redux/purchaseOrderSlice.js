@@ -47,11 +47,11 @@ export const createPurchaseOrder = createAsyncThunk(
 );
 
 export const updatePurchaseOrder = createAsyncThunk(
-  "purchaseOrder/update",
+  "updatePurchaseOrder/update",
   async ({ id, ...orderData }, { rejectWithValue }) => {
     try {
       const response = await API.put(`/api/purchase-orders/${id}`, orderData);
-      showToast("Purchase order updated successfully!", "success");
+      // showToast("Purchase order updated successfully!", "success");
       return response.data?.data;
     } catch (error) {
       console.error(`Error updating purchase order ${id}:`, error);
@@ -170,11 +170,11 @@ const purchaseOrderSlice = createSlice({
       })
       .addCase(updatePurchaseOrder.fulfilled, (state, action) => {
         state.loading = false;
-        const index = state.purchaseOrders.findIndex(po => po.id === action.payload.id);
+        const index = state.purchaseOrders.findIndex(po => po.id === action.payload?.id);
         if (index !== -1) {
           state.purchaseOrders[index] = action.payload;
         }
-        if (state.currentOrder?.id === action.payload.id) {
+        if (state.currentOrder?.id === action.payload?.id) {
           state.currentOrder = action.payload;
         }
       })

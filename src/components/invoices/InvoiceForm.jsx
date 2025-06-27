@@ -175,8 +175,6 @@ const InvoiceForm = ({ isEdit = false }) => {
                 }
                 const apiPayload = mapInvoiceToApi(values);
                 if (isEdit) {
-                    // console.log(apiPayload);
-                    // console.log(uuid);
                     await dispatch(updateInvoice({ id: uuid, invoiceData: apiPayload }));
                 } else {
                     await dispatch(createInvoice(apiPayload));
@@ -187,7 +185,6 @@ const InvoiceForm = ({ isEdit = false }) => {
             {(formik) => (
                 <form onSubmit={formik.handleSubmit} className="max-w-4xl mx-auto bg-white shadow rounded-xl p-0 border border-gray-200">
                     {/* Invoice Details Card Section */}
-                    {console.log(formik.errors)}
                     <div className="border border-gray-200 rounded-lg p-6 bg-gray-50 mb-6">
                         <h2 className="text-2xl font-bold mb-4">{isEdit ? 'Edit Invoice' : 'Create Invoice'}</h2>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

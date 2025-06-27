@@ -11,7 +11,6 @@ const InvoiceDetailsPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { invoice, loading, error } = useSelector((state) => state.invoice);
-console.log(invoice);
   useEffect(() => {
     dispatch(fetchInvoiceById(uuid));
     return () => { dispatch(clearInvoice()); };

@@ -21,7 +21,6 @@ const CustomerDetails = () => {
   const {uuid } = useParams();
   const dispatch = useDispatch();
 const customer = useSelector((state) => state.customer.selectedCustomer);
-console.log(customer,"hhjgvhvg");
   useEffect(() => {
     if(uuid){
       dispatch(getCustomerById(uuid));

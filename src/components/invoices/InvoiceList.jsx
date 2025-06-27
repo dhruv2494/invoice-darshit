@@ -8,7 +8,6 @@ const InvoiceList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { invoices, loading, error } = useSelector((state) => state.invoice);
-console.log(invoices);
   useEffect(() => {
     dispatch(fetchInvoices());
   }, [dispatch]);

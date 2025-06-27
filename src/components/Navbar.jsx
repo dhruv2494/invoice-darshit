@@ -2,15 +2,16 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiLogOut, FiUser, FiSettings, FiMail, FiFileText, FiChevronDown } from 'react-icons/fi';
 import { FaBars } from 'react-icons/fa';
+import { useSelector } from 'react-redux';
 
 const Navbar = ({ toggleSidebar }) => {
   const navigate = useNavigate();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  
+  const {profile, loading, error} = useSelector((state) => state.profile);
   // User data - replace with actual user data from your auth context
   const user = { 
-    name: 'Admin',
-    email: 'admin@example.com',
+    name: profile?.name,
+    email: profile?.email,
     avatar: null
   };
 
@@ -67,7 +68,7 @@ const Navbar = ({ toggleSidebar }) => {
                       />
                     ) : (
                       <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center">
-                        {user.name.charAt(0).toUpperCase()}
+                        {user?.name?.charAt(0).toUpperCase()||"A"}
                       </div>
                     )}
                   </div>
@@ -104,7 +105,7 @@ const Navbar = ({ toggleSidebar }) => {
                           Settings
                         </button>
                       </li>
-                      <li>
+                      {/* <li>
                         <a 
                           href="#" 
                           className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -121,7 +122,7 @@ const Navbar = ({ toggleSidebar }) => {
                           <FiFileText className="mr-3" />
                           Tasks
                         </a>
-                      </li>
+                      </li> */}
                     </ul>
                     <div className="border-t border-gray-100">
                       <button

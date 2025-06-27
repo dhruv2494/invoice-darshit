@@ -19,7 +19,7 @@ const DashboardLayout = ({ children }) => {
       />
 
       {/* Main content */}
-      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+      <div className="flex flex-col flex-1 min-w-0 overflow-hidden max-h-screen">
         <Navbar toggleSidebar={() => setSidebarOpen(!isSidebarOpen)} />
         
         {/* Breadcrumb */}

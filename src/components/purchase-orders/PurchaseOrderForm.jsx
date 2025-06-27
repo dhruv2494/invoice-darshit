@@ -45,7 +45,8 @@ const purchaseOrderSchema = Yup.object().shape({
 const PurchaseOrderForm = ({ onClose, initialValues: propInitialValues = {}, isEdit = false, onSuccess }) => {
   const dispatch = useDispatch();
   const { customers } = useSelector((state) => state.customer);
-  const { status,currentOrder } = useSelector((state) => state.purchaseOrder);
+  const {currentOrder } = useSelector((state) => state.purchaseOrder);
+  const status = ["draft", "pending", "overdue", "paid", "cancelled"];
   const { uuid } = useParams();
   // Format customers for react-select
   const customerOptions = useMemo(() => 
@@ -56,7 +57,6 @@ const PurchaseOrderForm = ({ onClose, initialValues: propInitialValues = {}, isE
     [customers]
   );
 
-  console.log('Current Order:', currentOrder);
   
   // Custom select component that works with Formik
   const CustomSelect = ({ options, field, form, ...props }) => {
@@ -159,14 +159,12 @@ const PurchaseOrderForm = ({ onClose, initialValues: propInitialValues = {}, isE
   };
   
   const initialValues = useMemo(() => getInitialValues(), [currentOrder, isEdit, propInitialValues]);  
-  console.log('Initial Values:', initialValues); // Debug log
 
   // Fetch customers on component mount
   useEffect(() => {
     dispatch(getCustomers());
     if (isEdit && uuid) {
       dispatch(getPurchaseOrderById(uuid)).then(() => {
-        console.log('Fetched currentOrder:', currentOrder); // Debug log
       });
     }
   
