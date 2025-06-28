@@ -164,14 +164,14 @@ const Dashboard = () => {
             <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
             <p className="text-gray-500">Welcome back! Here's what's happening with your store.</p>
           </div>
-          <div className="flex space-x-3">
+          {/* <div className="flex space-x-3">
             <button className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
               Export
             </button>
             <button className="px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
               Generate Report
             </button>
-          </div>
+          </div> */}
         </div>
 
         {/* Stats Grid */}

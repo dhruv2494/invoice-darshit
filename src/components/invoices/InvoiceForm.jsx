@@ -5,11 +5,12 @@ import { useDispatch, useSelector } from 'react-redux';
 import { clearInvoice, createInvoice, fetchInvoiceById, updateInvoice } from '../../redux/invoiceSlice';
 import { getPurchaseOrders } from '../../redux/purchaseOrderSlice';
 import Select from 'react-select';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { FiSave, FiArrowLeft } from 'react-icons/fi';
 
 const itemSchema = Yup.object().shape({
     itemName: Yup.string().required('Item Name is required'),
+    quantity: Yup.number().required('Quantity is required').min(0),
     grossWeight: Yup.number().required('Gross Weight is required').min(0),
     tareWeight: Yup.number().required('Tare Weight is required').min(0),
     netWeight: Yup.number().required('Net Weight is required').min(0),
@@ -33,8 +34,8 @@ const validationSchema = Yup.object({
     items: Yup.array().of(itemSchema).min(1, 'At least one item is required'),
     netAmount: Yup.number().required('Net Amount is required').min(0),
     status: Yup.string().required('Status is required'),
-    notes: Yup.string(),
-    terms: Yup.string(),
+    notes: Yup.string().nullable(),
+    terms: Yup.string().nullable(),
 });
 const mapApiToFormValues = (invoice) => {
     if (!invoice) return {};
@@ -48,6 +49,7 @@ const mapApiToFormValues = (invoice) => {
         items: (invoice.items || []).map((item) => ({
             id: item.id, // preserve item id for editing
             itemName: item.item_name,
+            quantity: item.quantity,
             grossWeight: item.gross_weight,
             tareWeight: item.tare_weight,
             netWeight: item.net_weight,
@@ -110,6 +112,7 @@ const InvoiceForm = ({ isEdit = false }) => {
         items: [
             {
                 itemName: '',
+                quantity: '',
                 grossWeight: '',
                 tareWeight: '',
                 netWeight: '',
@@ -158,6 +161,7 @@ const InvoiceForm = ({ isEdit = false }) => {
                         items: values.items.map(item => ({
                             ...(item.id ? { id: item.id } : {}),
                             item_name: item.itemName,
+                            quantity: item.quantity,
                             gross_weight: item.grossWeight,
                             tare_weight: item.tareWeight,
                             net_weight: item.netWeight,
@@ -204,7 +208,10 @@ const InvoiceForm = ({ isEdit = false }) => {
                                 {formik.touched.customerName && formik.errors.customerName && <div className="text-red-500 text-xs mt-1">{formik.errors.customerName}</div>}
                             </div>
                             <div>
+                                <div className='flex justify-between items-center flex-wrap'>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Purchase Order</label>
+                                <Link to="/purchase-orders/new" className="text-blue-500 hover:text-blue-700">Create New</Link>
+                                </div>
                                 <Select
                                     name="purchaseOrder"
                                     options={purchaseOrders.map(po => ({ ...po, value: po.id, label: po.po_number || po.po_ref_no || po.id }))}
@@ -264,6 +271,13 @@ const InvoiceForm = ({ isEdit = false }) => {
                                                     <input type="text" name={`items[${idx}].itemName`} value={item.itemName} onChange={formik.handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" />
                                                     {formik.touched.items && formik.touched.items[idx] && formik.errors.items && formik.errors.items[idx] && formik.errors.items[idx].itemName && (
                                                         <div className="text-red-500 text-xs mt-1">{formik.errors.items[idx].itemName}</div>
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+                                                    <input type="number" name={`items[${idx}].quantity`} value={item.quantity} onChange={formik.handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" />
+                                                    {formik.touched.items && formik.touched.items[idx] && formik.errors.items && formik.errors.items[idx] && formik.errors.items[idx].quantity && (
+                                                        <div className="text-red-500 text-xs mt-1">{formik.errors.items[idx].quantity}</div>
                                                     )}
                                                 </div>
                                                 <div>

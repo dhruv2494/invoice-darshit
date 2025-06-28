@@ -7,7 +7,8 @@ import {
   createPurchaseOrder, 
   updatePurchaseOrder,
   resetCurrentOrder,
-  getPurchaseOrderById
+  getPurchaseOrderById,
+  getPurchaseOrders
 } from '../../redux/purchaseOrderSlice';
 import { getCustomerById, getCustomers } from '../../redux/customerSlice';
 import { showToast } from '../../modules/utils';
@@ -188,6 +189,7 @@ const PurchaseOrderForm = ({ onClose, initialValues: propInitialValues = {}, isE
         isEdit ? 'Purchase order updated successfully' : 'Purchase order created successfully',
         'success'
       );
+      dispatch(getPurchaseOrders());
 
       if (onSuccess) {
         onSuccess();
