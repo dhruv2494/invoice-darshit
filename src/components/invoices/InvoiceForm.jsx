@@ -42,7 +42,7 @@ const mapApiToFormValues = (invoice) => {
     return {
         ...invoice,
         invoiceNumber: invoice.invoice_number,
-        date: invoice.date,
+        date: invoice.date ? new Date(invoice.date).toISOString().split('T')[0] : '',
         customerName: invoice.customer.name,
         customer_id: invoice.customer.id,
         purchaseOrder: invoice.po_id,
